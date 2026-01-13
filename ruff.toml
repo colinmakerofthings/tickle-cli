@@ -1,0 +1,46 @@
+[tool.ruff]
+# Target Python 3.9+
+target-version = "py39"
+line-length = 88
+
+# Include Python files and scripts
+include = ["**/*.py", "**/*.pyi"]
+
+# Exclude common non-code directories
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    ".pytest_cache",
+    "dist",
+    "build",
+]
+
+# Extended set of rule codes for quality code
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # Pyflakes
+    "I",      # isort (import sorting)
+    "N",      # pep8-naming
+    "UP",     # pyupgrade
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "RUF",    # ruff-specific rules
+]
+
+# Rules to ignore
+ignore = [
+    "E501",   # Line too long (handled by formatter)
+]
+
+[tool.ruff.lint.isort]
+# Organize imports like isort does
+known-first-party = ["tickle"]
+
+[tool.ruff.format]
+# Code formatting options
+quote-style = "double"
+indent-width = 4
+line-ending = "auto"
