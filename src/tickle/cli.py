@@ -1,6 +1,8 @@
 # src/tickle/cli.py
 import argparse
 
+import colorama
+
 from tickle import __version__
 from tickle.output import get_formatter
 from tickle.scanner import scan_directory
@@ -8,6 +10,9 @@ from tickle.scanner import scan_directory
 
 def main():
     """Main entry point for tickle CLI."""
+    # Initialize colorama for cross-platform color support
+    colorama.init()
+    
     parser = argparse.ArgumentParser(
         description="Scan repositories for outstanding developer tasks (TODO, FIXME, BUG, NOTE, HACK)"
     )
