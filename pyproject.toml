@@ -2,9 +2,23 @@
 name = "tickle"
 version = "0.1.0"
 description = "Scan repositories for outstanding developer tasks"
-requires-python = ">=3.10"# TODO: Add author and license fields
-# TODO: Add optional dependencies for dev tools (pytest, ruff)
-# TODO: Configure pytest section with testpaths
-# TODO: Configure ruff section
+authors = [
+    {name = "Tickle Contributors"}
+]
+license = {text = "MIT"}
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.1.0"
+]
+
 [project.scripts]
 tickle = "tickle.cli:app"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
