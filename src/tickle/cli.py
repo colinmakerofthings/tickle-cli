@@ -1,5 +1,6 @@
 # src/tickle/cli.py
 import argparse
+import json
 from tickle.scanner import scan_directory
 
 
@@ -41,28 +42,33 @@ def main():
     # Parse ignore patterns from comma-separated string
     ignore_patterns = [p.strip() for p in args.ignore.split(",") if p.strip()] if args.ignore else []
     
-    # TODO: Pass markers and ignore_patterns to scan_directory once it supports them
-    tasks = scan_directory(args.path)
+    # Scan directory with markers and ignore patterns
+    tasks = scan_directory(args.path, markers=markers, ignore_patterns=ignore_patterns)
     
     if not tasks:
         print("No tasks found!")
         return
     
-    # TODO: Use output.py formatters based on --format flag
+    # Format and output results
     if args.format == "text":
         for task in tasks:
-            print(f"{task['file']}:{task['line']}: [{task.get('marker', 'TODO')}] {task['text']}")
+            print(str(task))
     elif args.format == "json":
-        import json
-        print(json.dumps(tasks, indent=2))
+        task_dicts = [task.to_dict() for task in tasks]
+        print(json.dumps(task_dicts, indent=2))
     elif args.format == "markdown":
         print("# Outstanding Tasks\n")
         current_file = None
         for task in tasks:
-            if task['file'] != current_file:
-                current_file = task['file']
+            if task.file != current_file:
+                current_file = task.file
                 print(f"\n## {current_file}\n")
-            print(f"- Line {task['line']}: [{task.get('marker', 'TODO')}] {task['text']}")
+            print(f"- Line {task.line}: [{task.marker}] {task.text}")
+
+
+# Entry point for pyproject.toml scripts
+app = main
+
 
 
 # Entry point for pyproject.toml scripts
