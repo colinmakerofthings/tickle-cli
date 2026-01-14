@@ -7,6 +7,7 @@ import pytest
 
 from tickle.scanner import scan_directory
 from tickle.models import Task
+from tickle.detectors import CommentMarkerDetector, create_detector
 
 
 @pytest.fixture
@@ -145,4 +146,88 @@ class TestScanDirectory:
             
             tasks = scan_directory(tmpdir, markers=["TODO"])
             assert tasks == []
+
+
+class TestScanDirectoryWithDetector:
+    """Test scan_directory integration with detector instances."""
+    
+    def test_scan_directory_with_custom_detector(self):
+        """Test scan_directory works with custom detector instance."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text(
+                "# TODO: First\n"
+                "# FIXME: Second\n"
+            )
+            
+            detector = CommentMarkerDetector(markers=["TODO"])
+            tasks = scan_directory(str(tmpdir_path), detector=detector)
+            
+            assert len(tasks) == 1
+            assert tasks[0].marker == "TODO"
+    
+    def test_scan_directory_respects_detector_markers(self):
+        """Test that detector's marker list is respected."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text(
+                "# TODO: Item 1\n"
+                "# BUG: Item 2\n"
+                "# FIXME: Item 3\n"
+            )
+            
+            detector = CommentMarkerDetector(markers=["BUG", "FIXME"])
+            tasks = scan_directory(str(tmpdir_path), detector=detector)
+            
+            markers = {task.marker for task in tasks}
+            assert markers == {"BUG", "FIXME"}
+            assert len(tasks) == 2
+    
+    def test_scan_directory_detector_takes_precedence(self):
+        """Test that detector parameter takes precedence over markers parameter."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text(
+                "# TODO: Item 1\n"
+                "# FIXME: Item 2\n"
+            )
+            
+            # Pass both detector and markers - detector should win
+            detector = CommentMarkerDetector(markers=["TODO"])
+            tasks = scan_directory(
+                str(tmpdir_path),
+                markers=["FIXME"],
+                detector=detector
+            )
+            
+            # Should use detector's TODO, not the markers parameter's FIXME
+            assert len(tasks) == 1
+            assert tasks[0].marker == "TODO"
+    
+    def test_scan_directory_factory_detector(self):
+        """Test scan_directory with detector from factory."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text("# TODO: Test\n")
+            
+            detector = create_detector("comment", markers=["TODO"])
+            tasks = scan_directory(str(tmpdir_path), detector=detector)
+            
+            assert len(tasks) == 1
+            assert tasks[0].marker == "TODO"
+    
+    def test_scan_directory_without_detector_uses_markers(self):
+        """Test that markers parameter is used when detector not provided."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text(
+                "# TODO: Item 1\n"
+                "# FIXME: Item 2\n"
+            )
+            
+            # No detector provided, should use markers parameter
+            tasks = scan_directory(str(tmpdir_path), markers=["FIXME"])
+            
+            assert len(tasks) == 1
+            assert tasks[0].marker == "FIXME"
 

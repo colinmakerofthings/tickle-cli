@@ -4,9 +4,7 @@ from pathlib import Path
 from typing import List
 
 from tickle.models import Task
-
-# Default task markers to search for
-DEFAULT_TASK_MARKERS = ["TODO", "FIXME", "BUG", "NOTE", "HACK"]
+from tickle.detectors import Detector, create_detector, DEFAULT_TASK_MARKERS
 
 # Binary and media file extensions to skip
 BINARY_EXTENSIONS = {".png", ".jpg", ".jpeg", ".exe", ".bin", ".so", ".dll", ".pyc"}
@@ -35,7 +33,8 @@ def _should_ignore_path(filepath: Path, ignore_patterns: List[str]) -> bool:
 def scan_directory(
     directory: str,
     markers: List[str] = None,
-    ignore_patterns: List[str] = None
+    ignore_patterns: List[str] = None,
+    detector: Detector = None
 ) -> List[Task]:
     """Recursively scan a directory for task markers.
     
@@ -43,14 +42,18 @@ def scan_directory(
         directory: Root directory to scan
         markers: List of task markers to search for (default: TODO, FIXME, BUG, NOTE, HACK)
         ignore_patterns: List of glob patterns to ignore (e.g., ["*.min.js", "node_modules"])
+        detector: Detector instance to use for finding tasks. If None, creates a CommentMarkerDetector
+                  using the provided markers.
         
     Returns:
         List of Task objects found in the directory
     """
-    if markers is None:
-        markers = DEFAULT_TASK_MARKERS
     if ignore_patterns is None:
         ignore_patterns = []
+    
+    # Create detector if not provided
+    if detector is None:
+        detector = create_detector("comment", markers=markers)
     
     results: List[Task] = []
     directory_path = Path(directory)
@@ -71,17 +74,9 @@ def scan_directory(
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 for line_num, line in enumerate(f, start=1):
-                    # Check for any marker in the line
-                    for marker in markers:
-                        if marker in line:
-                            task = Task(
-                                file=str(filepath),
-                                line=line_num,
-                                marker=marker,
-                                text=line.strip()
-                            )
-                            results.append(task)
-                            break  # Only count first marker match per line
+                    # Use detector to find tasks in this line
+                    tasks = detector.detect(line, line_num, str(filepath))
+                    results.extend(tasks)
         except Exception:
             # Ignore files that can't be read as text
             pass
