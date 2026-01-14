@@ -19,7 +19,6 @@ I wanted a fast, configurable way to surface TODOs across many repos.
 - Multi-repo scanning
 - Configurable task markers
 - JSON / Markdown output
-- GitHub Actions support
 
 ## Installation
 
