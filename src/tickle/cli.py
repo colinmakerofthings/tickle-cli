@@ -1,7 +1,7 @@
 # src/tickle/cli.py
 import argparse
-import json
 from tickle.scanner import scan_directory
+from tickle.output import get_formatter
 
 
 def main():
@@ -45,30 +45,10 @@ def main():
     # Scan directory with markers and ignore patterns
     tasks = scan_directory(args.path, markers=markers, ignore_patterns=ignore_patterns)
     
-    if not tasks:
-        print("No tasks found!")
-        return
-    
     # Format and output results
-    if args.format == "text":
-        for task in tasks:
-            print(str(task))
-    elif args.format == "json":
-        task_dicts = [task.to_dict() for task in tasks]
-        print(json.dumps(task_dicts, indent=2))
-    elif args.format == "markdown":
-        print("# Outstanding Tasks\n")
-        current_file = None
-        for task in tasks:
-            if task.file != current_file:
-                current_file = task.file
-                print(f"\n## {current_file}\n")
-            print(f"- Line {task.line}: [{task.marker}] {task.text}")
-
-
-# Entry point for pyproject.toml scripts
-app = main
-
+    formatter = get_formatter(args.format)
+    output = formatter.format(tasks)
+    print(output)
 
 
 # Entry point for pyproject.toml scripts
