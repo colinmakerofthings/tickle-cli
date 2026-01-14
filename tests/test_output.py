@@ -1,11 +1,18 @@
 """Tests for tickle.output module."""
 
 import json
+import re
 
 import pytest
 
 from tickle.models import Task
 from tickle.output import JSONFormatter, MarkdownFormatter, TextFormatter
+
+
+def strip_ansi(text):
+    """Remove ANSI color codes from text."""
+    ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
+    return ansi_escape.sub('', text)
 
 
 class TestTaskFormatting:
@@ -116,9 +123,10 @@ class TestFormatters:
 
         lines = result.split("\n")
         assert len(lines) == 3
-        assert "src/main.py:5: [TODO]" in lines[0]
-        assert "src/main.py:12: [FIXME]" in lines[1]
-        assert "tests/test.py:3: [BUG]" in lines[2]
+        # Strip ANSI color codes for assertion
+        assert "src/main.py:5: [TODO]" in strip_ansi(lines[0])
+        assert "src/main.py:12: [FIXME]" in strip_ansi(lines[1])
+        assert "tests/test.py:3: [BUG]" in strip_ansi(lines[2])
 
     def test_text_formatter_empty_tasks(self, empty_tasks):
         """Test TextFormatter with empty task list."""
@@ -132,8 +140,10 @@ class TestFormatters:
         formatter = TextFormatter()
         result = formatter.format(single_task)
 
-        assert "app.py:1: [NOTE]" in result
-        assert "# NOTE: Remember this" in result
+        # Strip ANSI color codes for assertion
+        result_plain = strip_ansi(result)
+        assert "app.py:1: [NOTE]" in result_plain
+        assert "# NOTE: Remember this" in result_plain
 
     def test_text_formatter_preserves_order(self, multi_file_tasks):
         """Test that TextFormatter preserves input order."""
