@@ -4,6 +4,7 @@ import json
 import re
 
 import pytest
+from colorama import Fore
 
 from tickle.models import Task
 from tickle.output import JSONFormatter, MarkdownFormatter, TextFormatter
@@ -174,8 +175,8 @@ class TestFormatters:
         assert result_plain == "test.py:5: [TODO] # TODO: Remember to check [TODO] format"
 
         # Count color codes - should only be 1 (for the marker bracket only)
-        # The marker color code is \x1b[34m for TODO (blue)
-        color_code_count = result.count('\x1b[34m')
+        # TODO uses Fore.BLUE which is \x1b[34m
+        color_code_count = result.count(Fore.BLUE)
         assert color_code_count == 1, "Only the first [TODO] marker should be colorized"
 
     # JSONFormatter tests
