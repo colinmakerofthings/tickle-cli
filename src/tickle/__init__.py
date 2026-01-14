@@ -1,7 +1,7 @@
 """Tickle - Scan repositories for outstanding developer tasks."""
 
 try:
-    from importlib.metadata import version, PackageNotFoundError
+    from importlib.metadata import PackageNotFoundError, version
 
     __version__ = version("tickle")
 except PackageNotFoundError:
