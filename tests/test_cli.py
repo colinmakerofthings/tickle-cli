@@ -135,4 +135,14 @@ class TestCLI:
             
             data = json.loads(captured.out)
             assert all(item["marker"] == "TODO" for item in data)
+    
+    def test_version_flag(self, capsys):
+        """Test --version flag displays version."""
+        with mock.patch("sys.argv", ["tickle", "--version"]):
+            with pytest.raises(SystemExit) as exc_info:
+                main()
+            
+            assert exc_info.value.code == 0
+            captured = capsys.readouterr()
+            assert "0.1.0" in captured.out
 
