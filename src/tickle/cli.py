@@ -1,13 +1,18 @@
 # src/tickle/cli.py
 import argparse
 
+from colorama import init as colorama_init
+
 from tickle import __version__
-from tickle.output import get_formatter
+from tickle.output import generate_stats, get_formatter
 from tickle.scanner import scan_directory
 
 
 def main():
     """Main entry point for tickle CLI."""
+    # Initialize colorama for Windows compatibility
+    colorama_init(autoreset=True)
+
     parser = argparse.ArgumentParser(
         description="Scan repositories for outstanding developer tasks (TODO, FIXME, BUG, NOTE, HACK)"
     )
@@ -36,6 +41,11 @@ def main():
         help="Comma-separated list of file/directory patterns to ignore (e.g., *.min.js,node_modules)"
     )
     parser.add_argument(
+        "--stats",
+        action="store_true",
+        help="Show summary statistics instead of individual tasks"
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}"
@@ -53,8 +63,11 @@ def main():
     tasks = scan_directory(args.path, markers=markers, ignore_patterns=ignore_patterns)
 
     # Format and output results
-    formatter = get_formatter(args.format)
-    output = formatter.format(tasks)
+    if args.stats:
+        output = generate_stats(tasks)
+    else:
+        formatter = get_formatter(args.format)
+        output = formatter.format(tasks)
     print(output)
 
 

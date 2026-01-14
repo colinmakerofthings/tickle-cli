@@ -110,3 +110,51 @@ def get_formatter(format_type: str) -> Formatter:
         raise ValueError(f"Unknown format type: {format_type}")
 
     return formatter_class()
+
+
+def generate_stats(tasks: list[Task]) -> str:
+    """Generate summary statistics for tasks.
+
+    Args:
+        tasks: List of Task objects to analyze.
+
+    Returns:
+        Formatted string with statistics summary.
+    """
+    if not tasks:
+        return "No tasks found!"
+
+    # Total count
+    total = len(tasks)
+
+    # Count by marker type
+    marker_counts = {}
+    for task in tasks:
+        marker_counts[task.marker] = marker_counts.get(task.marker, 0) + 1
+
+    # Count by file
+    file_counts = {}
+    for task in tasks:
+        file_counts[task.file] = file_counts.get(task.file, 0) + 1
+
+    # Sort markers and files by count (descending)
+    sorted_markers = sorted(marker_counts.items(), key=lambda x: x[1], reverse=True)
+    sorted_files = sorted(file_counts.items(), key=lambda x: x[1], reverse=True)
+
+    # Build output
+    lines = []
+    lines.append(f"Total Tasks: {total}")
+
+    # Marker breakdown with colors
+    marker_parts = []
+    for marker, count in sorted_markers:
+        color = MARKER_COLORS.get(marker, Fore.WHITE)
+        marker_parts.append(f"{color}{marker}{Style.RESET_ALL}: {count}")
+    lines.append(", ".join(marker_parts))
+
+    # Top files (show top 5)
+    top_files = sorted_files[:5]
+    file_parts = [f"{file} ({count})" for file, count in top_files]
+    lines.append(f"Top Files: {', '.join(file_parts)}")
+
+    return "\n".join(lines)
