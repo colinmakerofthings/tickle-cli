@@ -74,4 +74,3 @@ Combine options:
 ```bash
 python -m tickle /path/to/repo --markers TODO,FIXME --format json --ignore "tests,venv"
 ```
-
