@@ -2,6 +2,7 @@
 import argparse
 from tickle.scanner import scan_directory
 from tickle.output import get_formatter
+from tickle import __version__
 
 
 def main():
@@ -32,6 +33,11 @@ def main():
         type=str,
         default="",
         help="Comma-separated list of file/directory patterns to ignore (e.g., *.min.js,node_modules)"
+    )
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}"
     )
     
     args = parser.parse_args()

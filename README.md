@@ -27,6 +27,12 @@ WIP
 
 ## Usage
 
+Check the version:
+
+```bash
+python -m tickle --version
+```
+
 Scan the current directory for tasks:
 
 ```bash
