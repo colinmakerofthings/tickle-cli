@@ -68,6 +68,14 @@ Ignore specific file patterns:
 python -m tickle --ignore "*.min.js,node_modules,build"
 ```
 
+Sort tasks by marker priority:
+
+```bash
+python -m tickle --sort marker
+```
+
+This groups tasks by priority (BUG → FIXME → TODO → HACK → NOTE), making it easy to focus on critical issues first. Default is `--sort file` which sorts by file path and line number.
+
 Combine options:
 
 ```bash
