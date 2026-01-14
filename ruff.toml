@@ -41,5 +41,5 @@ known-first-party = ["tickle"]
 [format]
 # Code formatting options
 quote-style = "double"
-indent-width = 4
+indent-style = "space"
 line-ending = "auto"
