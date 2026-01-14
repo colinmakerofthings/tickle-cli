@@ -47,6 +47,15 @@ def sample_repo():
         binary_file = tmpdir_path / "image.png"
         binary_file.write_bytes(b"\x89PNG\r\n\x1a\n")
 
+        # Create a markdown file with checkboxes
+        markdown_file = tmpdir_path / "tasks.md"
+        markdown_file.write_text(
+            "# Tasks\n"
+            "- [ ] Unchecked task 1\n"
+            "- [x] Checked task\n"
+            "- [ ] Unchecked task 2\n"
+        )
+
         yield tmpdir_path
 
 
@@ -57,15 +66,15 @@ class TestScanDirectory:
         """Test that scan_directory finds all marker types."""
         tasks = scan_directory(str(sample_repo))
 
-        assert len(tasks) == 6  # TODO, FIXME, BUG, NOTE, HACK, TODO (in subdir)
+        assert len(tasks) == 8  # TODO, FIXME, BUG, NOTE, HACK, TODO (in subdir), 2 CHECKBOXes
         assert all(isinstance(task, Task) for task in tasks)
 
     def test_scan_directory_default_markers(self, sample_repo):
-        """Test that default markers include TODO, FIXME, BUG, NOTE, HACK."""
+        """Test that default markers include TODO, FIXME, BUG, NOTE, HACK, CHECKBOX."""
         tasks = scan_directory(str(sample_repo))
         markers = {task.marker for task in tasks}
 
-        assert markers == {"TODO", "FIXME", "BUG", "NOTE", "HACK"}
+        assert markers == {"TODO", "FIXME", "BUG", "NOTE", "HACK", "CHECKBOX"}
 
     def test_scan_directory_custom_markers(self, sample_repo):
         """Test filtering with custom markers."""
@@ -146,6 +155,75 @@ class TestScanDirectory:
 
             tasks = scan_directory(tmpdir, markers=["TODO"])
             assert tasks == []
+
+    def test_ignores_hidden_directories(self):
+        """Test that hidden directories (starting with .) are ignored."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+
+            # Create normal file with TODO
+            (tmpdir_path / "main.py").write_text("# TODO: Normal file\n")
+
+            # Create hidden directory with file containing TODO
+            hidden_dir = tmpdir_path / ".git"
+            hidden_dir.mkdir()
+            (hidden_dir / "config").write_text("# TODO: Should be ignored\n")
+
+            # Create another hidden directory
+            vscode_dir = tmpdir_path / ".vscode"
+            vscode_dir.mkdir()
+            (vscode_dir / "settings.json").write_text("// TODO: Also ignored\n")
+
+            tasks = scan_directory(tmpdir)
+
+            # Should only find the TODO in main.py, not in hidden directories
+            assert len(tasks) == 1
+            assert "main.py" in tasks[0].file
+            assert ".git" not in tasks[0].file
+            assert ".vscode" not in tasks[0].file
+
+    def test_ignores_nested_hidden_directories(self):
+        """Test that nested hidden directories are also ignored."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+
+            # Create nested structure: normal/hidden/file
+            normal_dir = tmpdir_path / "src"
+            normal_dir.mkdir()
+            hidden_nested = normal_dir / ".cache"
+            hidden_nested.mkdir()
+            (hidden_nested / "temp.py").write_text("# TODO: Hidden nested\n")
+
+            # Create normal file
+            (normal_dir / "app.py").write_text("# TODO: Visible\n")
+
+            tasks = scan_directory(tmpdir)
+
+            # Should only find TODO in app.py
+            assert len(tasks) == 1
+            assert "app.py" in tasks[0].file
+
+    def test_include_hidden_directories_when_flag_set(self):
+        """Test that hidden directories are scanned when ignore_hidden=False."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+
+            # Create normal file with TODO
+            (tmpdir_path / "main.py").write_text("# TODO: Normal file\n")
+
+            # Create hidden directory with file containing TODO
+            hidden_dir = tmpdir_path / ".git"
+            hidden_dir.mkdir()
+            (hidden_dir / "config").write_text("# TODO: In hidden dir\n")
+
+            # Scan with ignore_hidden=False
+            tasks = scan_directory(tmpdir, ignore_hidden=False)
+
+            # Should find both TODOs
+            assert len(tasks) == 2
+            files = [task.file for task in tasks]
+            assert any("main.py" in f for f in files)
+            assert any(".git" in f for f in files)
 
 
 class TestScanDirectoryWithDetector:

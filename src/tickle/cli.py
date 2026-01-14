@@ -14,7 +14,7 @@ def main():
     colorama_init(autoreset=True)
 
     parser = argparse.ArgumentParser(
-        description="Scan repositories for outstanding developer tasks (TODO, FIXME, BUG, NOTE, HACK)"
+        description="Scan repositories for outstanding developer tasks (TODO, FIXME, BUG, NOTE, HACK, CHECKBOX)"
     )
     parser.add_argument(
         "path",
@@ -25,8 +25,8 @@ def main():
     parser.add_argument(
         "--markers",
         type=str,
-        default="TODO,FIXME,BUG,NOTE,HACK",
-        help="Comma-separated list of task markers to search for (default: TODO,FIXME,BUG,NOTE,HACK)"
+        default="TODO,FIXME,BUG,NOTE,HACK,CHECKBOX",
+        help="Comma-separated list of task markers to search for (default: TODO,FIXME,BUG,NOTE,HACK,CHECKBOX)"
     )
     parser.add_argument(
         "--format",
@@ -52,6 +52,11 @@ def main():
         help="Show summary statistics instead of individual tasks"
     )
     parser.add_argument(
+        "--include-hidden",
+        action="store_true",
+        help="Include hidden directories (starting with .) in scan"
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}"
@@ -66,7 +71,13 @@ def main():
     ignore_patterns = [p.strip() for p in args.ignore.split(",") if p.strip()] if args.ignore else []
 
     # Scan directory with markers and ignore patterns
-    tasks = scan_directory(args.path, markers=markers, ignore_patterns=ignore_patterns, sort_by=args.sort)
+    tasks = scan_directory(
+        args.path,
+        markers=markers,
+        ignore_patterns=ignore_patterns,
+        sort_by=args.sort,
+        ignore_hidden=not args.include_hidden
+    )
 
     # Format and output results
     if args.stats:

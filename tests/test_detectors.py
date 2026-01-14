@@ -183,6 +183,141 @@ class TestCommentMarkerDetector:
         assert tasks[0].marker == "FIXME"
 
 
+class TestMarkdownCheckboxDetector:
+    """Unit tests for MarkdownCheckboxDetector."""
+
+    def test_detect_finds_unchecked_dash_checkbox(self):
+        """detect() finds unchecked - [ ] checkbox."""
+        from tickle.detectors import MarkdownCheckboxDetector
+        detector = MarkdownCheckboxDetector()
+        tasks = detector.detect("- [ ] Task to do", 1, "todo.md")
+
+        assert len(tasks) == 1
+        assert tasks[0].marker == "CHECKBOX"
+        assert tasks[0].line == 1
+        assert tasks[0].file == "todo.md"
+        assert tasks[0].text == "- [ ] Task to do"
+
+    def test_detect_finds_unchecked_star_checkbox(self):
+        """detect() finds unchecked * [ ] checkbox."""
+        from tickle.detectors import MarkdownCheckboxDetector
+        detector = MarkdownCheckboxDetector()
+        tasks = detector.detect("* [ ] Another task", 2, "todo.md")
+
+        assert len(tasks) == 1
+        assert tasks[0].marker == "CHECKBOX"
+
+    def test_detect_handles_indentation(self):
+        """detect() finds checkboxes with leading whitespace."""
+        from tickle.detectors import MarkdownCheckboxDetector
+        detector = MarkdownCheckboxDetector()
+        tasks = detector.detect("  - [ ] Indented task", 3, "todo.md")
+
+        assert len(tasks) == 1
+        assert tasks[0].marker == "CHECKBOX"
+
+    def test_detect_ignores_checked_lowercase_x(self):
+        """detect() ignores checked [x] checkbox."""
+        from tickle.detectors import MarkdownCheckboxDetector
+        detector = MarkdownCheckboxDetector()
+        tasks = detector.detect("- [x] Completed task", 4, "todo.md")
+
+        assert tasks == []
+
+    def test_detect_ignores_checked_uppercase_x(self):
+        """detect() ignores checked [X] checkbox."""
+        from tickle.detectors import MarkdownCheckboxDetector
+        detector = MarkdownCheckboxDetector()
+        tasks = detector.detect("- [X] Done", 5, "todo.md")
+
+        assert tasks == []
+
+    def test_detect_returns_empty_for_no_match(self):
+        """detect() returns empty list for regular text."""
+        from tickle.detectors import MarkdownCheckboxDetector
+        detector = MarkdownCheckboxDetector()
+        tasks = detector.detect("Regular markdown text", 6, "todo.md")
+
+        assert tasks == []
+
+    def test_detect_requires_checkbox_at_start(self):
+        """detect() only matches checkboxes at line start."""
+        from tickle.detectors import MarkdownCheckboxDetector
+        detector = MarkdownCheckboxDetector()
+        tasks = detector.detect("Some text - [ ] checkbox", 7, "todo.md")
+
+        assert tasks == []
+
+    def test_detect_finds_checkbox_without_space(self):
+        """detect() finds checkboxes with no space between brackets."""
+        from tickle.detectors import MarkdownCheckboxDetector
+        detector = MarkdownCheckboxDetector()
+        tasks = detector.detect("- [] No space task", 8, "todo.md")
+
+        assert len(tasks) == 1
+        assert tasks[0].marker == "CHECKBOX"
+
+    def test_detect_finds_checkbox_with_multiple_spaces(self):
+        """detect() finds checkboxes with multiple spaces between brackets."""
+        from tickle.detectors import MarkdownCheckboxDetector
+        detector = MarkdownCheckboxDetector()
+        tasks = detector.detect("- [  ] Two spaces", 9, "todo.md")
+
+        assert len(tasks) == 1
+        assert tasks[0].marker == "CHECKBOX"
+
+
+class TestCompositeDetector:
+    """Unit tests for CompositeDetector."""
+
+    def test_runs_multiple_detectors(self):
+        """CompositeDetector runs all provided detectors."""
+        from tickle.detectors import (
+            CommentMarkerDetector,
+            CompositeDetector,
+            MarkdownCheckboxDetector,
+        )
+        comment_detector = CommentMarkerDetector(markers=["TODO"])
+        checkbox_detector = MarkdownCheckboxDetector()
+        composite = CompositeDetector([comment_detector, checkbox_detector])
+
+        # Line with both TODO and checkbox
+        tasks = composite.detect("- [ ] TODO: Something", 1, "test.md")
+
+        assert len(tasks) == 2
+        markers = {task.marker for task in tasks}
+        assert markers == {"TODO", "CHECKBOX"}
+
+    def test_combines_results_from_all_detectors(self):
+        """CompositeDetector aggregates all task results."""
+        from tickle.detectors import CommentMarkerDetector, CompositeDetector
+        todo_detector = CommentMarkerDetector(markers=["TODO"])
+        fixme_detector = CommentMarkerDetector(markers=["FIXME"])
+        composite = CompositeDetector([todo_detector, fixme_detector])
+
+        tasks = composite.detect("# TODO: Fix FIXME", 1, "test.py")
+
+        assert len(tasks) == 2
+
+    def test_returns_empty_when_no_detector_matches(self):
+        """CompositeDetector returns empty list when no tasks found."""
+        from tickle.detectors import CommentMarkerDetector, CompositeDetector
+        detector = CompositeDetector([CommentMarkerDetector(markers=["TODO"])])
+
+        tasks = detector.detect("Regular code", 1, "test.py")
+
+        assert tasks == []
+
+    def test_works_with_empty_detector_list(self):
+        """CompositeDetector handles empty detector list."""
+        from tickle.detectors import CompositeDetector
+        detector = CompositeDetector([])
+
+        tasks = detector.detect("Any line", 1, "test.py")
+
+        assert tasks == []
+
+
 class TestDetectorFactory:
     """Test detector factory function."""
 
