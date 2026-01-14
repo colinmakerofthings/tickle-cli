@@ -25,6 +25,7 @@ def get_sort_key(sort_by: str) -> Callable[["Task"], tuple]:
     if sort_by == "marker":
         def marker_sort_key(task: "Task") -> tuple:
             # Sort by marker priority (with unknown markers at the end), then file, then line
+            # Including marker ensures alphabetical ordering within the same priority level
             priority = MARKER_PRIORITY.get(task.marker, 999)
             return (priority, task.marker, task.file, task.line)
         return marker_sort_key

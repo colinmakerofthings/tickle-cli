@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from tickle.detectors import CommentMarkerDetector, create_detector
-from tickle.models import Task
+from tickle.models import Task, get_sort_key
 from tickle.scanner import scan_directory
 
 
@@ -294,7 +294,6 @@ class TestScanDirectorySorting:
             )
 
             # Need to manually create tasks since detector won't find UNKNOWN
-            from tickle.models import Task, get_sort_key
             tasks = [
                 Task(file="test.py", line=1, marker="UNKNOWN", text="# UNKNOWN: Should be last"),
                 Task(file="test.py", line=2, marker="TODO", text="# TODO: Should be before unknown"),
