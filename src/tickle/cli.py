@@ -41,6 +41,12 @@ def main():
         help="Comma-separated list of file/directory patterns to ignore (e.g., *.min.js,node_modules)"
     )
     parser.add_argument(
+        "--sort",
+        choices=["file", "marker"],
+        default="file",
+        help="Sort tasks by 'file' (file and line number, default) or 'marker' (marker type priority)"
+    )
+    parser.add_argument(
         "--stats",
         action="store_true",
         help="Show summary statistics instead of individual tasks"
@@ -60,7 +66,7 @@ def main():
     ignore_patterns = [p.strip() for p in args.ignore.split(",") if p.strip()] if args.ignore else []
 
     # Scan directory with markers and ignore patterns
-    tasks = scan_directory(args.path, markers=markers, ignore_patterns=ignore_patterns)
+    tasks = scan_directory(args.path, markers=markers, ignore_patterns=ignore_patterns, sort_by=args.sort)
 
     # Format and output results
     if args.stats:

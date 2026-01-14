@@ -3,7 +3,7 @@ from fnmatch import fnmatch
 from pathlib import Path
 
 from tickle.detectors import Detector, create_detector
-from tickle.models import Task
+from tickle.models import Task, get_sort_key
 
 # Binary and media file extensions to skip
 BINARY_EXTENSIONS = {".png", ".jpg", ".jpeg", ".exe", ".bin", ".so", ".dll", ".pyc"}
@@ -33,7 +33,8 @@ def scan_directory(
     directory: str,
     markers: list[str] | None = None,
     ignore_patterns: list[str] | None = None,
-    detector: Detector | None = None
+    detector: Detector | None = None,
+    sort_by: str = "file"
 ) -> list[Task]:
     """Recursively scan a directory for task markers.
 
@@ -43,6 +44,7 @@ def scan_directory(
         ignore_patterns: List of glob patterns to ignore (e.g., ["*.min.js", "node_modules"])
         detector: Detector instance to use for finding tasks. If None, creates a CommentMarkerDetector
                   using the provided markers.
+        sort_by: Sort method - "file" (by file and line, default) or "marker" (by marker priority)
 
     Returns:
         List of Task objects found in the directory
@@ -80,7 +82,8 @@ def scan_directory(
             # Ignore files that can't be read as text
             pass
 
-    # Sort by file and line number
-    results.sort()
+    # Sort by specified method
+    sort_key = get_sort_key(sort_by)
+    results.sort(key=sort_key)
     return results
 

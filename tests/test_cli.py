@@ -145,3 +145,65 @@ class TestCLI:
             captured = capsys.readouterr()
             assert "0.1.0" in captured.out
 
+    def test_sort_by_marker(self, capsys):
+        """Test --sort marker flag."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text(
+                "# TODO: Third priority\n"
+                "# BUG: First priority\n"
+                "# FIXME: Second priority\n"
+            )
+
+            with mock.patch("sys.argv", ["tickle", tmpdir, "--sort", "marker"]):
+                main()
+                captured = capsys.readouterr()
+
+                # Find positions of each marker in output
+                lines = captured.out.split("\n")
+                bug_line = next(i for i, line in enumerate(lines) if "BUG" in line)
+                fixme_line = next(i for i, line in enumerate(lines) if "FIXME" in line)
+                todo_line = next(i for i, line in enumerate(lines) if "TODO" in line)
+
+                # Should be in priority order: BUG, FIXME, TODO
+                assert bug_line < fixme_line < todo_line
+
+    def test_sort_by_file_default(self, capsys):
+        """Test default sorting is by file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "b.py").write_text("# BUG: High priority\n")
+            (tmpdir_path / "a.py").write_text("# NOTE: Low priority\n")
+
+            with mock.patch("sys.argv", ["tickle", tmpdir]):
+                main()
+                captured = capsys.readouterr()
+
+                # Find positions
+                lines = captured.out.split("\n")
+                a_py_line = next(i for i, line in enumerate(lines) if "a.py" in line)
+                b_py_line = next(i for i, line in enumerate(lines) if "b.py" in line)
+
+                # Should be sorted by file (a.py before b.py)
+                assert a_py_line < b_py_line
+
+    def test_sort_by_file_explicit(self, capsys):
+        """Test explicit --sort file flag."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "z.py").write_text("# BUG: High priority marker\n")
+            (tmpdir_path / "a.py").write_text("# NOTE: Low priority marker\n")
+
+            with mock.patch("sys.argv", ["tickle", tmpdir, "--sort", "file"]):
+                main()
+                captured = capsys.readouterr()
+
+                # Find positions
+                lines = captured.out.split("\n")
+                a_py_line = next(i for i, line in enumerate(lines) if "a.py" in line)
+                z_py_line = next(i for i, line in enumerate(lines) if "z.py" in line)
+
+                # Should be sorted by file (a.py before z.py)
+                assert a_py_line < z_py_line
+
+

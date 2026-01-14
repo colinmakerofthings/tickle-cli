@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from tickle.detectors import CommentMarkerDetector, create_detector
-from tickle.models import Task
+from tickle.models import Task, get_sort_key
 from tickle.scanner import scan_directory
 
 
@@ -230,4 +230,95 @@ class TestScanDirectoryWithDetector:
 
             assert len(tasks) == 1
             assert tasks[0].marker == "FIXME"
+
+
+class TestScanDirectorySorting:
+    """Test scan_directory sorting functionality."""
+
+    def test_scan_directory_sorts_by_file_default(self):
+        """Test that default sorting is by file and line number."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "b.py").write_text("# TODO: Second file\n")
+            (tmpdir_path / "a.py").write_text("# BUG: First file\n")
+
+            tasks = scan_directory(str(tmpdir_path))
+
+            # Default sorting: by file, then line
+            assert tasks[0].file.endswith("a.py")
+            assert tasks[0].marker == "BUG"
+            assert tasks[1].file.endswith("b.py")
+            assert tasks[1].marker == "TODO"
+
+    def test_scan_directory_sorts_by_marker(self):
+        """Test sorting by marker priority."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text(
+                "# TODO: Third priority\n"
+                "# BUG: First priority\n"
+                "# FIXME: Second priority\n"
+                "# NOTE: Fifth priority\n"
+                "# HACK: Fourth priority\n"
+            )
+
+            tasks = scan_directory(str(tmpdir_path), sort_by="marker")
+
+            # Should be sorted by marker priority: BUG, FIXME, TODO, HACK, NOTE
+            assert tasks[0].marker == "BUG"
+            assert tasks[1].marker == "FIXME"
+            assert tasks[2].marker == "TODO"
+            assert tasks[3].marker == "HACK"
+            assert tasks[4].marker == "NOTE"
+
+    def test_scan_directory_sorts_by_marker_then_file(self):
+        """Test that marker sorting includes secondary sort by file and line."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "b.py").write_text("# TODO: Task 1\n")
+            (tmpdir_path / "a.py").write_text("# TODO: Task 2\n")
+
+            tasks = scan_directory(str(tmpdir_path), sort_by="marker")
+
+            # Same marker priority, should sort by file
+            assert tasks[0].file.endswith("a.py")
+            assert tasks[1].file.endswith("b.py")
+
+    def test_scan_directory_sorts_unknown_marker_last(self):
+        """Test that unknown markers are sorted last."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text(
+                "# UNKNOWN: Should be last\n"
+                "# TODO: Should be before unknown\n"
+            )
+
+            # Need to manually create tasks since detector won't find UNKNOWN
+            tasks = [
+                Task(file="test.py", line=1, marker="UNKNOWN", text="# UNKNOWN: Should be last"),
+                Task(file="test.py", line=2, marker="TODO", text="# TODO: Should be before unknown"),
+            ]
+
+            sort_key = get_sort_key("marker")
+            tasks.sort(key=sort_key)
+
+            # TODO should come before UNKNOWN
+            assert tasks[0].marker == "TODO"
+            assert tasks[1].marker == "UNKNOWN"
+
+    def test_scan_directory_file_sort_explicit(self):
+        """Test explicit file sorting."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "b.py").write_text("# BUG: High priority marker\n")
+            (tmpdir_path / "a.py").write_text("# NOTE: Low priority marker\n")
+
+            tasks = scan_directory(str(tmpdir_path), sort_by="file")
+
+            # Should sort by file (a.py before b.py), not by marker priority
+            assert tasks[0].file.endswith("a.py")
+            assert tasks[0].marker == "NOTE"
+            assert tasks[1].file.endswith("b.py")
+            assert tasks[1].marker == "BUG"
+
 

@@ -1,6 +1,38 @@
 """Data models for tickle task scanning."""
 
 from dataclasses import dataclass
+from typing import Callable
+
+# Marker priority for sorting (lower number = higher priority)
+MARKER_PRIORITY = {
+    "BUG": 0,
+    "FIXME": 1,
+    "TODO": 2,
+    "HACK": 3,
+    "NOTE": 4,
+}
+
+
+def get_sort_key(sort_by: str) -> Callable[["Task"], tuple]:
+    """Get a sort key function for tasks.
+
+    Args:
+        sort_by: Sort method - "file" (by file and line) or "marker" (by marker, then file and line)
+
+    Returns:
+        A function that takes a Task and returns a sort key tuple
+    """
+    if sort_by == "marker":
+        def marker_sort_key(task: "Task") -> tuple:
+            # Sort by marker priority (with unknown markers at the end), then file, then line
+            # Including marker ensures alphabetical ordering within the same priority level
+            priority = MARKER_PRIORITY.get(task.marker, 999)
+            return (priority, task.marker, task.file, task.line)
+        return marker_sort_key
+    else:  # default to "file"
+        def file_sort_key(task: "Task") -> tuple:
+            return (task.file, task.line)
+        return file_sort_key
 
 
 @dataclass
