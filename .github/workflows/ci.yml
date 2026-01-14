@@ -1,0 +1,6 @@
+# .github/workflows/ci.yml
+# TODO: Configure CI workflow for push and pull_request events
+# TODO: Set up pytest tests for Python 3.10, 3.11, 3.12
+# TODO: Add ruff linting checks
+# TODO: Add caching for pip dependencies
+# TODO: Configure job failure behavior

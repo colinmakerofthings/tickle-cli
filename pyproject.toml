@@ -2,7 +2,9 @@
 name = "tickle"
 version = "0.1.0"
 description = "Scan repositories for outstanding developer tasks"
-requires-python = ">=3.10"
-
+requires-python = ">=3.10"# TODO: Add author and license fields
+# TODO: Add optional dependencies for dev tools (pytest, ruff)
+# TODO: Configure pytest section with testpaths
+# TODO: Configure ruff section
 [project.scripts]
 tickle = "tickle.cli:app"
