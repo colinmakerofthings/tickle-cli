@@ -15,6 +15,7 @@ MARKER_COLORS = {
     "BUG": Fore.RED,
     "NOTE": Fore.CYAN,
     "HACK": Fore.MAGENTA,
+    "CHECKBOX": Fore.GREEN,
 }
 
 

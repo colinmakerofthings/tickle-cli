@@ -17,7 +17,8 @@ I wanted a fast, configurable way to surface TODOs across many repos.
 ## Features
 
 - Multi-repo scanning
-- Configurable task markers
+- Configurable task markers (TODO, FIXME, BUG, NOTE, HACK, CHECKBOX)
+- Markdown checkbox detection (finds unchecked `- [ ]` items)
 - JSON / Markdown output
 
 ## Installation
@@ -74,7 +75,23 @@ Sort tasks by marker priority:
 python -m tickle --sort marker
 ```
 
-This groups tasks by priority (BUG → FIXME → TODO → HACK → NOTE), making it easy to focus on critical issues first. Default is `--sort file` which sorts by file path and line number.
+This groups tasks by priority (BUG → FIXME → TODO → HACK → NOTE → CHECKBOX), making it easy to focus on critical issues first. Default is `--sort file` which sorts by file path and line number.
+
+Scan for markdown checkboxes:
+
+```bash
+python -m tickle --markers CHECKBOX
+```
+
+This finds all unchecked markdown checkboxes (`- [ ]` or `* [ ]`) in your markdown files.
+
+Include hidden directories in scan:
+
+```bash
+python -m tickle --include-hidden
+```
+
+By default, hidden directories (starting with `.` like `.git`, `.vscode`) are ignored. Use this flag to include them.
 
 Combine options:
 

@@ -10,6 +10,7 @@ MARKER_PRIORITY = {
     "TODO": 2,
     "HACK": 3,
     "NOTE": 4,
+    "CHECKBOX": 5,
 }
 
 

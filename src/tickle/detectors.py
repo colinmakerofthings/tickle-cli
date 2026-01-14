@@ -6,7 +6,7 @@ from abc import ABC, abstractmethod
 from tickle.models import Task
 
 # Default task markers to search for
-DEFAULT_TASK_MARKERS = ["TODO", "FIXME", "BUG", "NOTE", "HACK"]
+DEFAULT_TASK_MARKERS = ["TODO", "FIXME", "BUG", "NOTE", "HACK", "CHECKBOX"]
 
 
 class Detector(ABC):
@@ -62,6 +62,66 @@ class CommentMarkerDetector(Detector):
                 return [task]
 
         return []
+
+
+class MarkdownCheckboxDetector(Detector):
+    """Detector that finds unchecked markdown checkboxes."""
+
+    def __init__(self):
+        """Initialize the markdown checkbox detector."""
+        import re
+        # Pattern matches: - [ ] or * [ ] (with optional space) and optional leading whitespace
+        self.pattern = re.compile(r'^\s*[-*]\s+\[\s*\]')
+
+    def detect(self, line: str, line_num: int, filepath: str) -> list[Task]:
+        """Find unchecked markdown checkboxes in the line.
+
+        Args:
+            line: The line of text to search
+            line_num: The line number (1-indexed)
+            filepath: The path to the file being scanned
+
+        Returns:
+            List containing one Task if an unchecked checkbox is found, empty list otherwise
+        """
+        if self.pattern.match(line):
+            task = Task(
+                file=filepath,
+                line=line_num,
+                marker="CHECKBOX",
+                text=line.strip()
+            )
+            return [task]
+        return []
+
+
+class CompositeDetector(Detector):
+    """Detector that runs multiple detectors and combines their results."""
+
+    def __init__(self, detectors: list[Detector]):
+        """Initialize with a list of detectors to run.
+
+        Args:
+            detectors: List of Detector instances to run on each line
+        """
+        self.detectors = detectors
+
+    def detect(self, line: str, line_num: int, filepath: str) -> list[Task]:
+        """Run all detectors and aggregate results.
+
+        Args:
+            line: The line of text to search
+            line_num: The line number (1-indexed)
+            filepath: The path to the file being scanned
+
+        Returns:
+            List of all Task objects found by any detector
+        """
+        results = []
+        for detector in self.detectors:
+            tasks = detector.detect(line, line_num, filepath)
+            results.extend(tasks)
+        return results
 
 
 def create_detector(detector_type: str = "comment", markers: list[str] | None = None) -> Detector:
