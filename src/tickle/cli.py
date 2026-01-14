@@ -1,8 +1,9 @@
 # src/tickle/cli.py
 import argparse
-from tickle.scanner import scan_directory
-from tickle.output import get_formatter
+
 from tickle import __version__
+from tickle.output import get_formatter
+from tickle.scanner import scan_directory
 
 
 def main():
@@ -39,18 +40,18 @@ def main():
         action="version",
         version=f"%(prog)s {__version__}"
     )
-    
+
     args = parser.parse_args()
-    
+
     # Parse markers from comma-separated string
     markers = [m.strip() for m in args.markers.split(",") if m.strip()]
-    
+
     # Parse ignore patterns from comma-separated string
     ignore_patterns = [p.strip() for p in args.ignore.split(",") if p.strip()] if args.ignore else []
-    
+
     # Scan directory with markers and ignore patterns
     tasks = scan_directory(args.path, markers=markers, ignore_patterns=ignore_patterns)
-    
+
     # Format and output results
     formatter = get_formatter(args.format)
     output = formatter.format(tasks)

@@ -1,13 +1,13 @@
 """Tests for tickle.detectors module."""
 
 import pytest
+
 from tickle.detectors import (
-    Detector,
-    CommentMarkerDetector,
-    create_detector,
     DEFAULT_TASK_MARKERS,
+    CommentMarkerDetector,
+    Detector,
+    create_detector,
 )
-from tickle.models import Task
 
 
 class TestCommentMarkerDetector:
