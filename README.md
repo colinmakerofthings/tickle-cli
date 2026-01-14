@@ -8,7 +8,9 @@
 ![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
 <!-- badges: end -->
 
-A lightweight tool that scans repositories for outstanding developer tasks.
+A lightweight, cross-platform tool that scans repositories for outstanding developer tasks.
+
+**Platform Support:** Windows, Linux, macOS
 
 ## Why?
 
@@ -20,6 +22,7 @@ I wanted a fast, configurable way to surface TODOs across many repos.
 - Configurable task markers (TODO, FIXME, BUG, NOTE, HACK, CHECKBOX)
 - Markdown checkbox detection (finds unchecked `- [ ]` items)
 - JSON / Markdown output
+- Cross-platform compatibility (Windows, Linux, macOS)
 
 ## Installation
 
