@@ -27,4 +27,45 @@ WIP
 
 ## Usage
 
-WIP
+Scan the current directory for tasks:
+
+```bash
+python -m tickle
+```
+
+Scan a specific directory:
+
+```bash
+python -m tickle /path/to/repo
+```
+
+Filter by specific task markers:
+
+```bash
+python -m tickle --markers TODO,FIXME,BUG
+```
+
+Output in JSON format:
+
+```bash
+python -m tickle --format json
+```
+
+Output in Markdown format:
+
+```bash
+python -m tickle --format markdown
+```
+
+Ignore specific file patterns:
+
+```bash
+python -m tickle --ignore "*.min.js,node_modules,build"
+```
+
+Combine options:
+
+```bash
+python -m tickle /path/to/repo --markers TODO,FIXME --format json --ignore "tests,venv"
+```
+
