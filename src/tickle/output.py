@@ -4,7 +4,18 @@
 import json
 from abc import ABC, abstractmethod
 
+from colorama import Fore, Style
+
 from tickle.models import Task
+
+# Marker-specific color mapping
+MARKER_COLORS = {
+    "TODO": Fore.BLUE,
+    "FIXME": Fore.YELLOW,
+    "BUG": Fore.RED,
+    "NOTE": Fore.CYAN,
+    "HACK": Fore.MAGENTA,
+}
 
 
 class Formatter(ABC):
@@ -27,11 +38,24 @@ class TextFormatter(Formatter):
     """Plain text formatter for task output."""
 
     def format(self, tasks: list[Task]) -> str:
-        """Format tasks as plain text, one per line."""
+        """Format tasks as plain text, one per line with colored markers."""
         if not tasks:
             return "No tasks found!"
 
-        return "\n".join(str(task) for task in tasks)
+        formatted_tasks = []
+        for task in tasks:
+            task_str = str(task)
+            # Colorize the marker in the task string
+            marker = task.marker
+            color = MARKER_COLORS.get(marker, Fore.WHITE)
+            # Replace the marker with colored version
+            colored_str = task_str.replace(
+                f"[{marker}]",
+                f"{color}[{marker}]{Style.RESET_ALL}"
+            )
+            formatted_tasks.append(colored_str)
+
+        return "\n".join(formatted_tasks)
 
 
 class JSONFormatter(Formatter):
