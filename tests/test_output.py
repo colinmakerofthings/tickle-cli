@@ -157,6 +157,27 @@ class TestFormatters:
         assert "b.py:2" in lines[2]
         assert "c.py:10" in lines[3]
 
+    def test_text_formatter_only_colorizes_first_marker(self):
+        """Test that only the actual marker is colorized, not occurrences in text."""
+        formatter = TextFormatter()
+        # Task with marker text appearing in the comment
+        task = Task(
+            file="test.py",
+            line=5,
+            marker="TODO",
+            text="# TODO: Remember to check [TODO] format"
+        )
+        result = formatter.format([task])
+
+        # Strip ANSI codes to check text is correct
+        result_plain = strip_ansi(result)
+        assert result_plain == "test.py:5: [TODO] # TODO: Remember to check [TODO] format"
+
+        # Count color codes - should only be 1 (for the marker bracket only)
+        # The marker color code is \x1b[34m for TODO (blue)
+        color_code_count = result.count('\x1b[34m')
+        assert color_code_count == 1, "Only the first [TODO] marker should be colorized"
+
     # JSONFormatter tests
     def test_json_formatter_with_tasks(self, sample_tasks):
         """Test JSONFormatter with normal task list."""

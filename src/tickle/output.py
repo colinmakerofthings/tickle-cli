@@ -44,14 +44,13 @@ class TextFormatter(Formatter):
 
         formatted_tasks = []
         for task in tasks:
-            task_str = str(task)
-            # Colorize the marker in the task string
+            # Construct output directly to colorize only the marker bracket
             marker = task.marker
             color = MARKER_COLORS.get(marker, Fore.WHITE)
-            # Replace the marker with colored version
-            colored_str = task_str.replace(
-                f"[{marker}]",
-                f"{color}[{marker}]{Style.RESET_ALL}"
+            colored_str = (
+                f"{task.file}:{task.line}: "
+                f"{color}[{marker}]{Style.RESET_ALL} "
+                f"{task.text}"
             )
             formatted_tasks.append(colored_str)
 
