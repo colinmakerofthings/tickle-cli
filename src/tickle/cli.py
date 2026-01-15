@@ -57,6 +57,16 @@ def main():
         help="Include hidden directories (starting with .) in scan"
     )
     parser.add_argument(
+        "--no-blame",
+        action="store_true",
+        help="Skip git blame enrichment (faster but no author/date info)"
+    )
+    parser.add_argument(
+        "--git-verbose",
+        action="store_true",
+        help="Show full git commit hash and message (only with git blame enabled)"
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}"
@@ -76,7 +86,8 @@ def main():
         markers=markers,
         ignore_patterns=ignore_patterns,
         sort_by=args.sort,
-        ignore_hidden=not args.include_hidden
+        ignore_hidden=not args.include_hidden,
+        enable_git_blame=not args.no_blame
     )
 
     # Display summary panel for text format (only if tasks exist)
@@ -85,7 +96,7 @@ def main():
         print()  # Blank line separator
 
     # Format and output results
-    formatter = get_formatter(args.format)
+    formatter = get_formatter(args.format, git_verbose=args.git_verbose)
     output = formatter.format(tasks)
     print(output)
 

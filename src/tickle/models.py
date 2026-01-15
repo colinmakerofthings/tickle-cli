@@ -45,11 +45,21 @@ class Task:
         line: Line number where the task is located (1-indexed)
         marker: Task marker type (e.g., "TODO", "FIXME", "BUG", "NOTE", "HACK")
         text: The full text of the line containing the task marker
+        author: Name of the person who wrote this line (from git blame)
+        author_email: Email of the author (from git blame)
+        commit_hash: Commit hash where this line was last modified (from git blame)
+        commit_date: Date when this line was last modified (from git blame)
+        commit_message: Commit message for the commit that last modified this line (from git blame)
     """
     file: str
     line: int
     marker: str
     text: str
+    author: str | None = None
+    author_email: str | None = None
+    commit_hash: str | None = None
+    commit_date: str | None = None
+    commit_message: str | None = None
 
     def __str__(self) -> str:
         """Return formatted string representation of the task."""
@@ -63,9 +73,21 @@ class Task:
 
     def to_dict(self) -> dict:
         """Convert task to dictionary format."""
-        return {
+        result = {
             "file": self.file,
             "line": self.line,
             "marker": self.marker,
             "text": self.text
         }
+        # Include git blame fields if present
+        if self.author is not None:
+            result["author"] = self.author
+        if self.author_email is not None:
+            result["author_email"] = self.author_email
+        if self.commit_hash is not None:
+            result["commit_hash"] = self.commit_hash
+        if self.commit_date is not None:
+            result["commit_date"] = self.commit_date
+        if self.commit_message is not None:
+            result["commit_message"] = self.commit_message
+        return result
