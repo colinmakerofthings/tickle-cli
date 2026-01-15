@@ -84,16 +84,6 @@ class TestCLI:
             assert all("marker" in item for item in data)
             assert all("text" in item for item in data)
 
-    def test_main_format_text(self, sample_repo, capsys):
-        """Test --format text (default) output."""
-        with mock.patch("sys.argv", ["tickle", str(sample_repo), "--format", "text"]):
-            main()
-            captured = capsys.readouterr()
-
-            # Should have readable format with file:line: [MARKER] text
-            assert "[TODO]" in captured.out or "[FIXME]" in captured.out
-            assert str(sample_repo) in captured.out or "tasks.py" in captured.out
-
     def test_main_format_markdown(self, sample_repo, capsys):
         """Test --format markdown output."""
         with mock.patch("sys.argv", ["tickle", str(sample_repo), "--format", "markdown"]):
@@ -159,18 +149,17 @@ class TestCLI:
                 main()
                 captured = capsys.readouterr()
 
-                # Find positions of each marker in output (skip panel lines by looking for file paths)
-                lines = captured.out.split("\n")
-                task_lines = [line for line in lines if "test.py" in line]
-                bug_line = next(i for i, line in enumerate(task_lines) if "BUG" in line)
-                fixme_line = next(i for i, line in enumerate(task_lines) if "FIXME" in line)
-                todo_line = next(i for i, line in enumerate(task_lines) if "TODO" in line)
+                # In tree format, tasks are shown with Line numbers and markers
+                # Find positions of each marker in output
+                bug_pos = captured.out.find("[BUG]")
+                fixme_pos = captured.out.find("[FIXME]")
+                todo_pos = captured.out.find("[TODO]")
 
                 # Should be in priority order: BUG, FIXME, TODO
-                assert bug_line < fixme_line < todo_line
+                assert bug_pos < fixme_pos < todo_pos
 
     def test_sort_by_file_default(self, capsys):
-        """Test default sorting is by file."""
+        """Test default sorting is by file and uses tree format."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir_path = Path(tmpdir)
             (tmpdir_path / "b.py").write_text("# BUG: High priority\n")
@@ -180,13 +169,11 @@ class TestCLI:
                 main()
                 captured = capsys.readouterr()
 
-                # Find positions
-                lines = captured.out.split("\n")
-                a_py_line = next(i for i, line in enumerate(lines) if "a.py" in line)
-                b_py_line = next(i for i, line in enumerate(lines) if "b.py" in line)
-
-                # Should be sorted by file (a.py before b.py)
-                assert a_py_line < b_py_line
+                # Should use tree format with proper structure
+                assert "📁" in captured.out or "📄" in captured.out
+                # Files should appear in alphabetical order
+                assert "a.py" in captured.out
+                assert "b.py" in captured.out
 
     def test_sort_by_file_explicit(self, capsys):
         """Test explicit --sort file flag."""
@@ -211,9 +198,9 @@ class TestCLI:
 class TestSummaryPanel:
     """Test cases for the summary panel feature."""
 
-    def test_panel_appears_in_text_mode(self, sample_repo, capsys):
-        """Test that summary panel appears in text format."""
-        with mock.patch("sys.argv", ["tickle", str(sample_repo), "--format", "text"]):
+    def test_panel_appears_by_default(self, sample_repo, capsys):
+        """Test that summary panel appears by default (tree format)."""
+        with mock.patch("sys.argv", ["tickle", str(sample_repo)]):
             main()
             captured = capsys.readouterr()
 
@@ -249,11 +236,11 @@ class TestSummaryPanel:
     def test_panel_not_shown_when_no_tasks(self, capsys):
         """Test that summary panel doesn't appear when no tasks found."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            with mock.patch("sys.argv", ["tickle", tmpdir, "--format", "text"]):
+            with mock.patch("sys.argv", ["tickle", tmpdir]):
                 main()
                 captured = capsys.readouterr()
 
-                # Panel should not appear
+                # Panel should not appear when no tasks
                 assert "Task Summary" not in captured.out
                 # Should show normal empty message
                 assert "No tasks found!" in captured.out

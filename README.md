@@ -8,7 +8,7 @@
 ![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-d7ff64.svg)
 <!-- badges: end -->
 
-A lightweight, cross-platform tool that scans your files and repos for TODOs, code comments, and markdown checkboxes-whether tracking bugs across repos or managing tasks in personal notes.
+A lightweight, cross-platform tool that provides **hierarchical visualization** of TODOs, code comments, and markdown checkboxes across your repositories and personal notes.
 
 *The name? It's all about **tick**ing things off your list.*
 
@@ -20,12 +20,13 @@ I wanted a fast, configurable way to surface TODOs across many repos. Whether it
 
 ## Features
 
+- **Hierarchical tree view** showing tasks organized by directory structure
 - Multi-repo scanning
 - Configurable task markers (TODO, FIXME, BUG, NOTE, HACK, CHECKBOX)
 - Markdown checkbox detection (finds unchecked `- [ ]` items)
 - Git blame enrichment (shows who wrote each task and when)
-- Visual summary panel showing task counts and breakdown (in text mode)
-- JSON / Markdown output
+- Visual summary panel showing task counts and breakdown
+- Alternative JSON / Markdown output formats for automation
 - Cross-platform compatibility (Windows, Linux, macOS)
 
 ## Installation
@@ -54,18 +55,24 @@ Scan the current directory for tasks:
 python -m tickle
 ```
 
-**Output includes a summary panel** (in text mode):
+**Output shows a hierarchical tree view** with summary panel:
 
 ```text
-
 ┌─────── Task Summary ────────┐
 │ Total: 14 tasks in 6 files  │
 │ BUG: 2 | FIXME: 5 | TODO: 7 │
 └─────────────────────────────┘
 
-src/main.py:10: [TODO] # TODO: Implement feature by alice, 2 days ago
-src/main.py:25: [FIXME] # FIXME: Fix bug by bob, 3 weeks ago
-...
+📁 tickle-cli (14 tasks)
+├── 📁 src (10)
+│   ├── 📁 tickle (10)
+│   │   ├── 📄 cli.py (2)
+│   │   │   ├── [TODO] Line 15: Add config file support (by alice, 2 days ago)
+│   │   │   └── [FIXME] Line 42: Handle edge case (by bob, 3 weeks ago)
+│   │   └── 📄 scanner.py (3)
+│   │       └── [BUG] Line 67: Memory leak (by charlie, 1 month ago)
+└── 📁 tests (4)
+    └── 📄 test_cli.py (4)
 ```
 
 *Note: Git blame information (author and date) is automatically included when scanning git repositories. Use `--no-blame` to disable this feature for faster scanning.*
@@ -82,19 +89,27 @@ Filter by specific task markers:
 python -m tickle --markers TODO,FIXME,BUG
 ```
 
-Output in JSON format:
+Show collapsed tree view (counts only):
+
+```bash
+python -m tickle --tree-collapse
+```
+
+This shows just the directory structure with task counts, hiding individual task details.
+
+Output in JSON format (for automation):
 
 ```bash
 python -m tickle --format json
 ```
 
-Output in Markdown format:
+Output in Markdown format (for documentation):
 
 ```bash
 python -m tickle --format markdown
 ```
 
-*Note: Summary panel is only shown in text mode. JSON and Markdown formats output data only.*
+*Note: Summary panel and tree view are shown by default. Use `--format json` or `--format markdown` for machine-readable or documentation output.*
 
 Ignore specific file patterns:
 
@@ -145,5 +160,5 @@ This shows additional git details including the commit hash and commit message f
 Combine options:
 
 ```bash
-python -m tickle /path/to/repo --markers TODO,FIXME --format json --ignore "tests,venv"
+python -m tickle /path/to/repo --markers TODO,FIXME --ignore "tests,venv" --tree-collapse
 ```

@@ -35,9 +35,9 @@ def main():
     )
     parser.add_argument(
         "--format",
-        choices=["text", "json", "markdown"],
-        default="text",
-        help="Output format (default: text)"
+        choices=["tree", "json", "markdown"],
+        default="tree",
+        help="Output format (default: tree)"
     )
     parser.add_argument(
         "--ignore",
@@ -67,6 +67,11 @@ def main():
         help="Show full git commit hash and message (only with git blame enabled)"
     )
     parser.add_argument(
+        "--tree-collapse",
+        action="store_true",
+        help="Show only directory structure with counts (hide task details)"
+    )
+    parser.add_argument(
         "--version",
         action="version",
         version=f"%(prog)s {__version__}"
@@ -90,13 +95,18 @@ def main():
         enable_git_blame=not args.no_blame
     )
 
-    # Display summary panel for text format (only if tasks exist)
-    if tasks and args.format == "text":
+    # Display summary panel for tree format (only if tasks exist)
+    if tasks and args.format == "tree":
         display_summary_panel(tasks)
         print()  # Blank line separator
 
     # Format and output results
-    formatter = get_formatter(args.format, git_verbose=args.git_verbose)
+    formatter = get_formatter(
+        args.format,
+        git_verbose=args.git_verbose,
+        tree_collapse=args.tree_collapse,
+        scan_directory=args.path
+    )
     output = formatter.format(tasks)
     print(output)
 
