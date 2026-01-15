@@ -8,6 +8,7 @@
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Tests](https://img.shields.io/github/actions/workflow/status/colinmakerofthings/tickle-cli/test.yml?label=tests)
 ![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)
+[![Coverage](https://codecov.io/gh/colinmakerofthings/tickle-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/colinmakerofthings/tickle-cli)
 <!-- badges: end -->
 
 A lightweight, cross-platform tool that scans repositories for outstanding developer tasks.
