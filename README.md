@@ -23,6 +23,7 @@ I wanted a fast, configurable way to surface TODOs across many repos. Whether it
 - Multi-repo scanning
 - Configurable task markers (TODO, FIXME, BUG, NOTE, HACK, CHECKBOX)
 - Markdown checkbox detection (finds unchecked `- [ ]` items)
+- Git blame enrichment (shows who wrote each task and when)
 - Visual summary panel showing task counts and breakdown (in text mode)
 - JSON / Markdown output
 - Cross-platform compatibility (Windows, Linux, macOS)
@@ -62,10 +63,12 @@ python -m tickle
 │ BUG: 2 | FIXME: 5 | TODO: 7 │
 └─────────────────────────────┘
 
-src/main.py:10: [TODO] # TODO: Implement feature
-src/main.py:25: [FIXME] # FIXME: Fix bug
+src/main.py:10: [TODO] # TODO: Implement feature by alice, 2 days ago
+src/main.py:25: [FIXME] # FIXME: Fix bug by bob, 3 weeks ago
 ...
 ```
+
+*Note: Git blame information (author and date) is automatically included when scanning git repositories. Use `--no-blame` to disable this feature for faster scanning.*
 
 Scan a specific directory:
 
@@ -122,6 +125,22 @@ python -m tickle --include-hidden
 ```
 
 By default, hidden directories (starting with `.` like `.git`, `.vscode`) are ignored. Use this flag to include them.
+
+Disable git blame enrichment:
+
+```bash
+python -m tickle --no-blame
+```
+
+By default, tickle enriches task output with git blame information (author and date). Use this flag to skip git blame for faster scanning when you don't need author/date information.
+
+Show verbose git information:
+
+```bash
+python -m tickle --git-verbose
+```
+
+This shows additional git details including the commit hash and commit message for each task. Only works when git blame is enabled (don't use with `--no-blame`).
 
 Combine options:
 
