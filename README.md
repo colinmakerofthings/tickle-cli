@@ -21,6 +21,7 @@ I wanted a fast, configurable way to surface TODOs across many repos.
 - Multi-repo scanning
 - Configurable task markers (TODO, FIXME, BUG, NOTE, HACK, CHECKBOX)
 - Markdown checkbox detection (finds unchecked `- [ ]` items)
+- Visual summary panel showing task counts and breakdown (in text mode)
 - JSON / Markdown output
 - Cross-platform compatibility (Windows, Linux, macOS)
 
@@ -42,6 +43,20 @@ Scan the current directory for tasks:
 python -m tickle
 ```
 
+**Output includes a summary panel** (in text mode):
+
+```text
+
+┌─────── Task Summary ────────┐
+│ Total: 14 tasks in 6 files  │
+│ BUG: 2 | FIXME: 5 | TODO: 7 │
+└─────────────────────────────┘
+
+src/main.py:10: [TODO] # TODO: Implement feature
+src/main.py:25: [FIXME] # FIXME: Fix bug
+...
+```
+
 Scan a specific directory:
 
 ```bash
@@ -59,6 +74,8 @@ Output in JSON format:
 ```bash
 python -m tickle --format json
 ```
+
+*Note: Summary panel is only shown in text mode. JSON and Markdown formats output data only.*
 
 Output in Markdown format:
 

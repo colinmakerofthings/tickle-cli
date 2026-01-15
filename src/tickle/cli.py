@@ -1,15 +1,20 @@
 # src/tickle/cli.py
 import argparse
+import sys
 
 from colorama import init as colorama_init
 
 from tickle import __version__
-from tickle.output import generate_stats, get_formatter
+from tickle.output import display_summary_panel, get_formatter
 from tickle.scanner import scan_directory
 
 
 def main():
     """Main entry point for tickle CLI."""
+    # Set UTF-8 encoding for stdout on Windows
+    if sys.platform == "win32":
+        sys.stdout.reconfigure(encoding='utf-8')
+
     # Initialize colorama for Windows compatibility
     colorama_init(autoreset=True)
 
@@ -47,11 +52,6 @@ def main():
         help="Sort tasks by 'file' (file and line number, default) or 'marker' (marker type priority)"
     )
     parser.add_argument(
-        "--stats",
-        action="store_true",
-        help="Show summary statistics instead of individual tasks"
-    )
-    parser.add_argument(
         "--include-hidden",
         action="store_true",
         help="Include hidden directories (starting with .) in scan"
@@ -79,12 +79,14 @@ def main():
         ignore_hidden=not args.include_hidden
     )
 
+    # Display summary panel for text format (only if tasks exist)
+    if tasks and args.format == "text":
+        display_summary_panel(tasks)
+        print()  # Blank line separator
+
     # Format and output results
-    if args.stats:
-        output = generate_stats(tasks)
-    else:
-        formatter = get_formatter(args.format)
-        output = formatter.format(tasks)
+    formatter = get_formatter(args.format)
+    output = formatter.format(tasks)
     print(output)
 
 
