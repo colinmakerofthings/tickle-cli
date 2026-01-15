@@ -1,7 +1,7 @@
 [project]
 name = "tickle"
 version = "0.1.0"
-description = "Scan repositories for outstanding developer tasks"
+description = "Hierarchical visualization of developer tasks across code repositories"
 authors = [
     {name = "Tickle Contributors"}
 ]
