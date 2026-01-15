@@ -125,6 +125,22 @@ python -m tickle --sort marker
 
 This groups tasks by priority (BUG → FIXME → TODO → HACK → NOTE → CHECKBOX), making it easy to focus on critical issues first. Default is `--sort file` which sorts by file path and line number.
 
+Sort by commit age (oldest first):
+
+```bash
+python -m tickle --sort age
+```
+
+This shows oldest TODOs first based on git commit date, helping identify technical debt and long-standing issues. Tasks without git blame data appear last.
+
+Sort by author:
+
+```bash
+python -m tickle --sort author
+```
+
+This groups tasks alphabetically by author name, making it easy to see who wrote each TODO. Requires git blame to be enabled (default).
+
 Scan for markdown checkboxes:
 
 ```bash
