@@ -502,6 +502,58 @@ class TestScanDirectorySorting:
         assert tasks[1].author is None
         assert tasks[2].author is None
 
+    def test_scan_directory_reverse_sort_by_file(self):
+        """Test that reverse flag reverses file sort order."""
+        tasks = [
+            Task(file="a.py", line=1, marker="TODO", text="Task 1"),
+            Task(file="b.py", line=1, marker="TODO", text="Task 2"),
+            Task(file="c.py", line=1, marker="TODO", text="Task 3"),
+        ]
+
+        # Normal sort
+        sort_key = get_sort_key("file")
+        tasks_normal = tasks.copy()
+        tasks_normal.sort(key=sort_key, reverse=False)
+
+        # Reverse sort
+        tasks_reversed = tasks.copy()
+        tasks_reversed.sort(key=sort_key, reverse=True)
+
+        assert tasks_normal[0].file == "a.py"
+        assert tasks_normal[2].file == "c.py"
+        assert tasks_reversed[0].file == "c.py"
+        assert tasks_reversed[2].file == "a.py"
+
+    def test_scan_directory_reverse_sort_by_age(self):
+        """Test that reverse flag reverses age sort (newest first)."""
+        tasks = [
+            Task(file="a.py", line=1, marker="TODO", text="Old",
+                 commit_date="2023-01-15T10:00:00"),
+            Task(file="b.py", line=1, marker="TODO", text="New",
+                 commit_date="2024-12-20T15:30:00"),
+        ]
+
+        sort_key = get_sort_key("age")
+        tasks.sort(key=sort_key, reverse=True)
+
+        # With reverse, newest should come first
+        assert tasks[0].commit_date == "2024-12-20T15:30:00"
+        assert tasks[1].commit_date == "2023-01-15T10:00:00"
+
+    def test_scan_directory_reverse_sort_by_marker(self):
+        """Test that reverse flag reverses marker priority sort."""
+        tasks = [
+            Task(file="a.py", line=1, marker="BUG", text="High priority"),
+            Task(file="b.py", line=1, marker="NOTE", text="Low priority"),
+        ]
+
+        sort_key = get_sort_key("marker")
+        tasks.sort(key=sort_key, reverse=True)
+
+        # With reverse, lowest priority (NOTE) should come first
+        assert tasks[0].marker == "NOTE"
+        assert tasks[1].marker == "BUG"
+
 
 class TestScanDirectoryErrorHandling:
     """Test error handling in scan_directory."""
