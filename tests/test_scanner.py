@@ -399,6 +399,109 @@ class TestScanDirectorySorting:
             assert tasks[1].file.endswith("b.py")
             assert tasks[1].marker == "BUG"
 
+    def test_scan_directory_sorts_by_age_oldest_first(self):
+        """Test sorting by age with oldest tasks first."""
+        tasks = [
+            Task(file="a.py", line=1, marker="TODO", text="Old task",
+                 commit_date="2023-01-15T10:00:00"),
+            Task(file="b.py", line=1, marker="TODO", text="New task",
+                 commit_date="2024-12-20T15:30:00"),
+            Task(file="c.py", line=1, marker="TODO", text="Middle task",
+                 commit_date="2024-06-10T08:45:00"),
+        ]
+
+        sort_key = get_sort_key("age")
+        tasks.sort(key=sort_key)
+
+        assert tasks[0].commit_date == "2023-01-15T10:00:00"  # Oldest
+        assert tasks[1].commit_date == "2024-06-10T08:45:00"  # Middle
+        assert tasks[2].commit_date == "2024-12-20T15:30:00"  # Newest
+
+    def test_age_sort_none_values_go_last(self):
+        """Test that tasks without commit_date are sorted last."""
+        tasks = [
+            Task(file="a.py", line=1, marker="TODO", text="No date", commit_date=None),
+            Task(file="b.py", line=1, marker="TODO", text="Old task",
+                 commit_date="2023-01-15T10:00:00"),
+            Task(file="c.py", line=1, marker="TODO", text="No date 2", commit_date=None),
+        ]
+
+        sort_key = get_sort_key("age")
+        tasks.sort(key=sort_key)
+
+        # Task with date comes first
+        assert tasks[0].commit_date == "2023-01-15T10:00:00"
+        # None values at the end
+        assert tasks[1].commit_date is None
+        assert tasks[2].commit_date is None
+
+    def test_age_sort_secondary_sort_by_file_line(self):
+        """Test that age sorting includes secondary sort by file and line."""
+        tasks = [
+            Task(file="z.py", line=10, marker="TODO", text="Task 1",
+                 commit_date="2024-01-15T10:00:00"),
+            Task(file="a.py", line=5, marker="TODO", text="Task 2",
+                 commit_date="2024-01-15T10:00:00"),
+            Task(file="a.py", line=1, marker="TODO", text="Task 3",
+                 commit_date="2024-01-15T10:00:00"),
+        ]
+
+        sort_key = get_sort_key("age")
+        tasks.sort(key=sort_key)
+
+        # Same date, should sort by file then line
+        assert tasks[0].file == "a.py" and tasks[0].line == 1
+        assert tasks[1].file == "a.py" and tasks[1].line == 5
+        assert tasks[2].file == "z.py" and tasks[2].line == 10
+
+    def test_scan_directory_sorts_by_author_alphabetically(self):
+        """Test sorting by author name alphabetically."""
+        tasks = [
+            Task(file="a.py", line=1, marker="TODO", text="Task 1", author="Charlie"),
+            Task(file="b.py", line=1, marker="TODO", text="Task 2", author="Alice"),
+            Task(file="c.py", line=1, marker="TODO", text="Task 3", author="Bob"),
+        ]
+
+        sort_key = get_sort_key("author")
+        tasks.sort(key=sort_key)
+
+        assert tasks[0].author == "Alice"
+        assert tasks[1].author == "Bob"
+        assert tasks[2].author == "Charlie"
+
+    def test_author_sort_case_insensitive(self):
+        """Test that author sorting is case-insensitive."""
+        tasks = [
+            Task(file="a.py", line=1, marker="TODO", text="Task 1", author="charlie"),
+            Task(file="b.py", line=1, marker="TODO", text="Task 2", author="Alice"),
+            Task(file="c.py", line=1, marker="TODO", text="Task 3", author="BOB"),
+        ]
+
+        sort_key = get_sort_key("author")
+        tasks.sort(key=sort_key)
+
+        # Should be alphabetical, case-insensitive
+        assert tasks[0].author == "Alice"
+        assert tasks[1].author == "BOB"
+        assert tasks[2].author == "charlie"
+
+    def test_author_sort_none_values_go_last(self):
+        """Test that tasks without author are sorted last."""
+        tasks = [
+            Task(file="a.py", line=1, marker="TODO", text="No author", author=None),
+            Task(file="b.py", line=1, marker="TODO", text="Has author", author="Alice"),
+            Task(file="c.py", line=1, marker="TODO", text="No author 2", author=None),
+        ]
+
+        sort_key = get_sort_key("author")
+        tasks.sort(key=sort_key)
+
+        # Task with author comes first
+        assert tasks[0].author == "Alice"
+        # None values at the end
+        assert tasks[1].author is None
+        assert tasks[2].author is None
+
 
 class TestScanDirectoryErrorHandling:
     """Test error handling in scan_directory."""

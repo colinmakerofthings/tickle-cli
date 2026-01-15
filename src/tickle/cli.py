@@ -47,9 +47,15 @@ def main():
     )
     parser.add_argument(
         "--sort",
-        choices=["file", "marker"],
+        choices=["file", "marker", "age", "author"],
         default="file",
-        help="Sort tasks by 'file' (file and line number, default) or 'marker' (marker type priority)"
+        help=(
+            "Sort tasks by: "
+            "'file' (file and line number, default), "
+            "'marker' (marker type priority), "
+            "'age' (oldest first by commit date), "
+            "'author' (alphabetically by author name)"
+        )
     )
     parser.add_argument(
         "--include-hidden",
