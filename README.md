@@ -31,6 +31,12 @@ I wanted a fast, configurable way to surface TODOs across many repos. Whether it
 
 ## Installation
 
+### From PyPI (Recommended)
+
+```bash
+pip install tickle-cli
+```
+
 ### From Source (Development)
 
 ```bash
@@ -39,20 +45,18 @@ cd tickle-cli
 pip install -e ".[dev]"
 ```
 
-*PyPI package coming soon.*
-
 ## Usage
 
 Check the version:
 
 ```bash
-python -m tickle --version
+tickle --version
 ```
 
 Scan the current directory for tasks:
 
 ```bash
-python -m tickle
+tickle
 ```
 
 **Output shows a hierarchical tree view** with summary panel:
@@ -80,19 +84,19 @@ python -m tickle
 Scan a specific directory:
 
 ```bash
-python -m tickle /path/to/repo
+tickle /path/to/repo
 ```
 
 Filter by specific task markers:
 
 ```bash
-python -m tickle --markers TODO,FIXME,BUG
+tickle --markers TODO,FIXME,BUG
 ```
 
 Show collapsed tree view (counts only):
 
 ```bash
-python -m tickle --tree-collapse
+tickle --tree-collapse
 ```
 
 This shows just the directory structure with task counts, hiding individual task details.
@@ -100,13 +104,13 @@ This shows just the directory structure with task counts, hiding individual task
 Output in JSON format (for automation):
 
 ```bash
-python -m tickle --format json
+tickle --format json
 ```
 
 Output in Markdown format (for documentation):
 
 ```bash
-python -m tickle --format markdown
+tickle --format markdown
 ```
 
 *Note: Summary panel and tree view are shown by default. Use `--format json` or `--format markdown` for machine-readable or documentation output.*
@@ -114,13 +118,13 @@ python -m tickle --format markdown
 Ignore specific file patterns:
 
 ```bash
-python -m tickle --ignore "*.min.js,node_modules,build"
+tickle --ignore "*.min.js,node_modules,build"
 ```
 
 Sort tasks by marker priority:
 
 ```bash
-python -m tickle --sort marker
+tickle --sort marker
 ```
 
 This groups tasks by priority (BUG → FIXME → TODO → HACK → NOTE → CHECKBOX), making it easy to focus on critical issues first. Default is `--sort file` which sorts by file path and line number.
@@ -128,7 +132,7 @@ This groups tasks by priority (BUG → FIXME → TODO → HACK → NOTE → CHEC
 Sort by commit age (oldest first):
 
 ```bash
-python -m tickle --sort age
+tickle --sort age
 ```
 
 This shows oldest TODOs first based on git commit date, helping identify technical debt and long-standing issues. Tasks without git blame data appear last.
@@ -136,26 +140,15 @@ This shows oldest TODOs first based on git commit date, helping identify technic
 Sort by author:
 
 ```bash
-python -m tickle --sort author
+tickle --sort author
 ```
 
 This groups tasks alphabetically by author name, making it easy to see who wrote each TODO. Requires git blame to be enabled (default).
 
-Reverse any sort order:
-
-```bash
-python -m tickle --sort age --reverse
-```
-
-The `--reverse` flag reverses any sort order. Examples:
-- `--sort age --reverse` shows newest tasks first
-- `--sort author --reverse` shows authors in reverse alphabetical order
-- `--sort marker --reverse` shows lowest priority markers first
-
 Scan for markdown checkboxes:
 
 ```bash
-python -m tickle --markers CHECKBOX
+tickle --markers CHECKBOX
 ```
 
 This finds all unchecked markdown checkboxes (`- [ ]` or `* [ ]`) in your markdown files.
@@ -163,7 +156,7 @@ This finds all unchecked markdown checkboxes (`- [ ]` or `* [ ]`) in your markdo
 Include hidden directories in scan:
 
 ```bash
-python -m tickle --include-hidden
+tickle --include-hidden
 ```
 
 By default, hidden directories (starting with `.` like `.git`, `.vscode`) are ignored. Use this flag to include them.
@@ -171,7 +164,7 @@ By default, hidden directories (starting with `.` like `.git`, `.vscode`) are ig
 Disable git blame enrichment:
 
 ```bash
-python -m tickle --no-blame
+tickle --no-blame
 ```
 
 By default, tickle enriches task output with git blame information (author and date). Use this flag to skip git blame for faster scanning when you don't need author/date information.
@@ -179,7 +172,7 @@ By default, tickle enriches task output with git blame information (author and d
 Show verbose git information:
 
 ```bash
-python -m tickle --git-verbose
+tickle --git-verbose
 ```
 
 This shows additional git details including the commit hash and commit message for each task. Only works when git blame is enabled (don't use with `--no-blame`).
@@ -187,5 +180,5 @@ This shows additional git details including the commit hash and commit message f
 Combine options:
 
 ```bash
-python -m tickle /path/to/repo --markers TODO,FIXME --ignore "tests,venv" --tree-collapse
+tickle /path/to/repo --markers TODO,FIXME --ignore "tests,venv" --tree-collapse
 ```
