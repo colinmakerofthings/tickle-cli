@@ -8,6 +8,7 @@ from tickle.detectors import (
     MarkdownCheckboxDetector,
     create_detector,
 )
+from tickle.git_utils import get_file_blame, is_in_git_repo
 from tickle.models import Task, get_sort_key
 
 # Binary and media file extensions to skip
@@ -47,7 +48,8 @@ def scan_directory(
     ignore_patterns: list[str] | None = None,
     detector: Detector | None = None,
     sort_by: str = "file",
-    ignore_hidden: bool = True
+    ignore_hidden: bool = True,
+    enable_git_blame: bool = True
 ) -> list[Task]:
     """Recursively scan a directory for task markers.
 
@@ -59,6 +61,7 @@ def scan_directory(
                   using the provided markers.
         sort_by: Sort method - "file" (by file and line, default) or "marker" (by marker priority)
         ignore_hidden: Whether to ignore hidden directories starting with . (default: True)
+        enable_git_blame: Whether to enrich tasks with git blame information (default: True)
 
     Returns:
         List of Task objects found in the directory
@@ -106,8 +109,50 @@ def scan_directory(
             # Ignore files that can't be read as text
             pass
 
+    # Enrich with git blame if requested and in a git repo
+    if enable_git_blame and results:
+        results = _enrich_tasks_with_git_blame(results)
+
     # Sort by specified method
     sort_key = get_sort_key(sort_by)
     results.sort(key=sort_key)
     return results
+
+
+def _enrich_tasks_with_git_blame(tasks: list[Task]) -> list[Task]:
+    """Enrich tasks with git blame information.
+
+    Args:
+        tasks: List of tasks to enrich
+
+    Returns:
+        The same list of tasks, modified in place with git blame information
+    """
+    # Group tasks by file for efficient batching
+    tasks_by_file: dict[str, list[Task]] = {}
+    for task in tasks:
+        if task.file not in tasks_by_file:
+            tasks_by_file[task.file] = []
+        tasks_by_file[task.file].append(task)
+
+    # Process each file
+    for filepath, file_tasks in tasks_by_file.items():
+        # Skip if file is not in a git repo
+        if not is_in_git_repo(filepath):
+            continue
+
+        # Get blame information for the entire file (single git call)
+        blame_data = get_file_blame(filepath)
+
+        # Enrich each task with its line's blame info
+        for task in file_tasks:
+            if task.line in blame_data:
+                blame = blame_data[task.line]
+                task.author = blame.author
+                task.author_email = blame.author_email
+                task.commit_hash = blame.commit_hash
+                task.commit_date = blame.commit_date
+                task.commit_message = blame.commit_message
+
+    return tasks
 

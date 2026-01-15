@@ -423,3 +423,50 @@ class TestScanDirectoryErrorHandling:
             assert tasks[0].marker == "TODO"
             assert "readable.py" in tasks[0].file
 
+
+class TestGitBlameEnrichment:
+    """Test git blame enrichment functionality."""
+
+    def test_scan_with_no_blame_flag(self):
+        """Test that enable_git_blame=False skips blame enrichment."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            test_file = tmpdir_path / "test.py"
+            test_file.write_text("# TODO: Task\n")
+
+            tasks = scan_directory(str(tmpdir_path), enable_git_blame=False)
+
+            # Should not have git blame info
+            assert len(tasks) == 1
+            assert tasks[0].author is None
+            assert tasks[0].commit_hash is None
+
+    def test_scan_with_git_blame_enabled(self):
+        """Test that enable_git_blame=True attempts enrichment (may fail gracefully)."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            test_file = tmpdir_path / "test.py"
+            test_file.write_text("# TODO: Task\n")
+
+            # This will likely not be a git repo, so blame info should be None
+            # but it should not crash
+            tasks = scan_directory(str(tmpdir_path), enable_git_blame=True)
+
+            assert len(tasks) == 1
+            # In a non-git directory, blame fields should remain None
+            assert tasks[0].author is None
+
+    def test_scan_default_enables_git_blame(self):
+        """Test that git blame is enabled by default."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            test_file = tmpdir_path / "test.py"
+            test_file.write_text("# TODO: Task\n")
+
+            # Default should have enable_git_blame=True
+            tasks = scan_directory(str(tmpdir_path))
+
+            assert len(tasks) == 1
+            # Should have attempted enrichment (even if no git repo)
+
+

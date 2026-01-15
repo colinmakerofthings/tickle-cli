@@ -3,8 +3,10 @@
 
 import json
 from abc import ABC, abstractmethod
+from datetime import datetime
 
 from colorama import Fore, Style
+from humanize import naturaltime
 from rich import box
 from rich.console import Console
 from rich.panel import Panel
@@ -42,6 +44,14 @@ class Formatter(ABC):
 class TextFormatter(Formatter):
     """Plain text formatter for task output."""
 
+    def __init__(self, git_verbose: bool = False):
+        """Initialize the text formatter.
+
+        Args:
+            git_verbose: Whether to show full git commit info (hash and message)
+        """
+        self.git_verbose = git_verbose
+
     def format(self, tasks: list[Task]) -> str:
         """Format tasks as plain text, one per line with colored markers."""
         if not tasks:
@@ -58,9 +68,51 @@ class TextFormatter(Formatter):
                 f"[{marker}]",
                 f"{color}[{marker}]{Style.RESET_ALL}"
             )
+
+            # Add git blame info if available
+            if task.author:
+                git_info = self._format_git_info(task)
+                colored_str += f" {Fore.LIGHTBLACK_EX}{git_info}{Style.RESET_ALL}"
+
             formatted_tasks.append(colored_str)
 
         return "\n".join(formatted_tasks)
+
+    def _format_git_info(self, task: Task) -> str:
+        """Format git blame information for a task.
+
+        Args:
+            task: Task with git blame information
+
+        Returns:
+            Formatted git info string
+        """
+        parts = []
+
+        # Always show author and date if available
+        if task.author:
+            parts.append(f"by {task.author}")
+
+        if task.commit_date:
+            try:
+                # Parse ISO format date and convert to relative time
+                commit_dt = datetime.fromisoformat(task.commit_date)
+                relative_time = naturaltime(commit_dt)
+                parts.append(relative_time)
+            except (ValueError, TypeError):
+                pass
+
+        # Show hash and message only in verbose mode
+        if self.git_verbose:
+            if task.commit_hash:
+                # Show short hash (first 7 chars)
+                short_hash = task.commit_hash[:7]
+                parts.append(f"({short_hash})")
+
+            if task.commit_message:
+                parts.append(f'"{task.commit_message}"')
+
+        return ", ".join(parts) if parts else ""
 
 
 class JSONFormatter(Formatter):
@@ -75,6 +127,14 @@ class JSONFormatter(Formatter):
 class MarkdownFormatter(Formatter):
     """Markdown formatter for task output."""
 
+    def __init__(self, git_verbose: bool = False):
+        """Initialize the markdown formatter.
+
+        Args:
+            git_verbose: Whether to show full git commit info (hash and message)
+        """
+        self.git_verbose = git_verbose
+
     def format(self, tasks: list[Task]) -> str:
         """Format tasks as Markdown with file grouping."""
         if not tasks:
@@ -87,16 +147,58 @@ class MarkdownFormatter(Formatter):
             if task.file != current_file:
                 current_file = task.file
                 lines.append(f"\n## {current_file}\n")
-            lines.append(f"- Line {task.line}: [{task.marker}] {task.text}")
+
+            line_text = f"- Line {task.line}: [{task.marker}] {task.text}"
+
+            # Add git info if available
+            if task.author:
+                git_info = self._format_git_info(task)
+                if git_info:
+                    line_text += f" _{git_info}_"
+
+            lines.append(line_text)
 
         return "\n".join(lines)
 
+    def _format_git_info(self, task: Task) -> str:
+        """Format git blame information for a task.
 
-def get_formatter(format_type: str) -> Formatter:
+        Args:
+            task: Task with git blame information
+
+        Returns:
+            Formatted git info string
+        """
+        parts = []
+
+        if task.author:
+            parts.append(f"by {task.author}")
+
+        if task.commit_date:
+            try:
+                commit_dt = datetime.fromisoformat(task.commit_date)
+                relative_time = naturaltime(commit_dt)
+                parts.append(relative_time)
+            except (ValueError, TypeError):
+                pass
+
+        if self.git_verbose:
+            if task.commit_hash:
+                short_hash = task.commit_hash[:7]
+                parts.append(f"`{short_hash}`")
+
+            if task.commit_message:
+                parts.append(f'"{task.commit_message}"')
+
+        return ", ".join(parts) if parts else ""
+
+
+def get_formatter(format_type: str, git_verbose: bool = False) -> Formatter:
     """Factory function to get the appropriate formatter.
 
     Args:
         format_type: The format type ('text', 'json', or 'markdown').
+        git_verbose: Whether to show full git commit info (hash and message)
 
     Returns:
         An instance of the appropriate Formatter subclass.
@@ -104,17 +206,14 @@ def get_formatter(format_type: str) -> Formatter:
     Raises:
         ValueError: If format_type is not recognized.
     """
-    formatters = {
-        "text": TextFormatter,
-        "json": JSONFormatter,
-        "markdown": MarkdownFormatter,
-    }
-
-    formatter_class = formatters.get(format_type)
-    if formatter_class is None:
+    if format_type == "text":
+        return TextFormatter(git_verbose=git_verbose)
+    elif format_type == "json":
+        return JSONFormatter()
+    elif format_type == "markdown":
+        return MarkdownFormatter(git_verbose=git_verbose)
+    else:
         raise ValueError(f"Unknown format type: {format_type}")
-
-    return formatter_class()
 
 
 def display_summary_panel(tasks: list[Task]) -> None:

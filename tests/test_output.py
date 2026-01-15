@@ -396,3 +396,128 @@ class TestDisplaySummaryPanel:
         assert "HACK" not in captured.out
         assert "NOTE" not in captured.out
         assert "CHECKBOX" not in captured.out
+
+
+class TestGitBlameFormatting:
+    """Test git blame information formatting."""
+
+    @pytest.fixture
+    def task_with_blame(self):
+        """Create a task with git blame information."""
+        return Task(
+            file="src/main.py",
+            line=10,
+            marker="TODO",
+            text="# TODO: Fix this",
+            author="John Doe",
+            author_email="john@example.com",
+            commit_hash="abc123def456789",
+            commit_date="2024-01-15T10:30:00",
+            commit_message="Add feature"
+        )
+
+    @pytest.fixture
+    def task_without_blame(self):
+        """Create a task without git blame information."""
+        return Task(
+            file="src/main.py",
+            line=10,
+            marker="TODO",
+            text="# TODO: Fix this"
+        )
+
+    def test_text_formatter_shows_git_info(self, task_with_blame):
+        """Test that TextFormatter shows git blame info when available."""
+        formatter = TextFormatter(git_verbose=False)
+        result = formatter.format([task_with_blame])
+
+        result_plain = strip_ansi(result)
+        assert "by John Doe" in result_plain
+        # Should show relative time (humanize output varies)
+        assert "ago" in result_plain or "from now" in result_plain
+
+    def test_text_formatter_verbose_shows_hash_and_message(self, task_with_blame):
+        """Test that TextFormatter shows full git info in verbose mode."""
+        formatter = TextFormatter(git_verbose=True)
+        result = formatter.format([task_with_blame])
+
+        result_plain = strip_ansi(result)
+        assert "by John Doe" in result_plain
+        assert "abc123d" in result_plain  # Short hash (7 chars)
+        assert "Add feature" in result_plain
+
+    def test_text_formatter_no_git_info_when_absent(self, task_without_blame):
+        """Test that TextFormatter works without git blame info."""
+        formatter = TextFormatter(git_verbose=False)
+        result = formatter.format([task_without_blame])
+
+        result_plain = strip_ansi(result)
+        assert "src/main.py:10: [TODO]" in result_plain
+        # Should not have git info
+        assert "by" not in result_plain
+
+    def test_markdown_formatter_shows_git_info(self, task_with_blame):
+        """Test that MarkdownFormatter shows git blame info when available."""
+        formatter = MarkdownFormatter(git_verbose=False)
+        result = formatter.format([task_with_blame])
+
+        assert "by John Doe" in result
+        assert "_" in result  # Git info should be italicized
+
+    def test_markdown_formatter_verbose_shows_hash(self, task_with_blame):
+        """Test that MarkdownFormatter shows hash in verbose mode."""
+        formatter = MarkdownFormatter(git_verbose=True)
+        result = formatter.format([task_with_blame])
+
+        assert "`abc123d`" in result  # Hash in code format
+        assert "Add feature" in result
+
+    def test_markdown_formatter_no_git_info_when_absent(self, task_without_blame):
+        """Test that MarkdownFormatter works without git blame info."""
+        formatter = MarkdownFormatter(git_verbose=False)
+        result = formatter.format([task_without_blame])
+
+        assert "Line 10: [TODO]" in result
+        assert "by" not in result
+
+    def test_json_formatter_includes_git_fields(self, task_with_blame):
+        """Test that JSONFormatter includes git blame fields when present."""
+        formatter = JSONFormatter()
+        result = formatter.format([task_with_blame])
+
+        parsed = json.loads(result)
+        assert parsed[0]["author"] == "John Doe"
+        assert parsed[0]["author_email"] == "john@example.com"
+        assert parsed[0]["commit_hash"] == "abc123def456789"
+        assert parsed[0]["commit_date"] == "2024-01-15T10:30:00"
+        assert parsed[0]["commit_message"] == "Add feature"
+
+    def test_json_formatter_excludes_absent_git_fields(self, task_without_blame):
+        """Test that JSONFormatter excludes git fields when not present."""
+        formatter = JSONFormatter()
+        result = formatter.format([task_without_blame])
+
+        parsed = json.loads(result)
+        assert "author" not in parsed[0]
+        assert "author_email" not in parsed[0]
+        assert "commit_hash" not in parsed[0]
+        assert "commit_date" not in parsed[0]
+        assert "commit_message" not in parsed[0]
+
+    def test_get_formatter_passes_git_verbose_to_text(self):
+        """Test that get_formatter passes git_verbose to TextFormatter."""
+        formatter = get_formatter("text", git_verbose=True)
+        assert isinstance(formatter, TextFormatter)
+        assert formatter.git_verbose is True
+
+    def test_get_formatter_passes_git_verbose_to_markdown(self):
+        """Test that get_formatter passes git_verbose to MarkdownFormatter."""
+        formatter = get_formatter("markdown", git_verbose=True)
+        assert isinstance(formatter, MarkdownFormatter)
+        assert formatter.git_verbose is True
+
+    def test_get_formatter_json_ignores_git_verbose(self):
+        """Test that get_formatter works with JSONFormatter (no git_verbose param)."""
+        formatter = get_formatter("json", git_verbose=True)
+        assert isinstance(formatter, JSONFormatter)
+
