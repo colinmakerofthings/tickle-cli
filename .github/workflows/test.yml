@@ -69,7 +69,11 @@ jobs:
       id: pytest
       run: |
         pytest --cov=tickle --cov-report=term-missing --cov-report=xml -v | tee pytest-output.txt
-          echo "tests=$(grep -o '[0-9]* passed' pytest-output.txt | grep -o '[0-9]*' || echo '0')" >> $GITHUB_OUTPUT
+        echo "tests=$(grep -o '[0-9]* passed' pytest-output.txt | grep -o '[0-9]*' || echo '0')" >> $GITHUB_OUTPUT
+
+    - name: Create test count badge
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+      uses: schneegans/dynamic-badges-action@v1.7.0
       with:
         auth: ${{ secrets.GIST_SECRET }}
         gistID: 38120414da63546897e889745fcb37c0
