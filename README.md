@@ -1,9 +1,6 @@
 # tickle 🪶
 
-*Work-in-Progress – API and features are evolving.*
-
 <!-- badges: start -->
-![Project Status: Work In Progress](https://www.repostatus.org/badges/1.0.0/wip.svg)
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Tests](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/colinmakerofthings/38120414da63546897e889745fcb37c0/raw/tickle-tests.json)
@@ -11,13 +8,15 @@
 ![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-d7ff64.svg)
 <!-- badges: end -->
 
-A lightweight, cross-platform tool that scans repositories for outstanding developer tasks.
+A lightweight, cross-platform tool that scans your files and repos for TODOs, code comments, and markdown checkboxes-whether tracking bugs across repos or managing tasks in personal notes.
+
+*The name? It's all about **tick**ing things off your list.*
 
 **Platform Support:** Windows, Linux, macOS
 
 ## Why?
 
-I wanted a fast, configurable way to surface TODOs across many repos.
+I wanted a fast, configurable way to surface TODOs across many repos. Whether it's tracking bugs in code or managing your life in markdown journals and task lists, tickle finds and reports what needs attention.
 
 ## Features
 
@@ -30,7 +29,15 @@ I wanted a fast, configurable way to surface TODOs across many repos.
 
 ## Installation
 
-WIP
+### From Source (Development)
+
+```bash
+git clone https://github.com/colinmakerofthings/tickle-cli.git
+cd tickle-cli
+pip install -e ".[dev]"
+```
+
+*PyPI package coming soon.*
 
 ## Usage
 
@@ -78,13 +85,13 @@ Output in JSON format:
 python -m tickle --format json
 ```
 
-*Note: Summary panel is only shown in text mode. JSON and Markdown formats output data only.*
-
 Output in Markdown format:
 
 ```bash
 python -m tickle --format markdown
 ```
+
+*Note: Summary panel is only shown in text mode. JSON and Markdown formats output data only.*
 
 Ignore specific file patterns:
 
