@@ -6,7 +6,7 @@
 ![Project Status: Work In Progress](https://www.repostatus.org/badges/1.0.0/wip.svg)
 ![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Tests](https://img.shields.io/github/actions/workflow/status/colinmakerofthings/tickle-cli/test.yml?label=tests)
+![Tests](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/colinmakerofthings/38120414da63546897e889745fcb37c0/raw/tickle-tests.json)
 ![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)
 [![Coverage](https://codecov.io/gh/colinmakerofthings/tickle-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/colinmakerofthings/tickle-cli)
 <!-- badges: end -->

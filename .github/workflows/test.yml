@@ -66,8 +66,21 @@ jobs:
         pip install -e ".[dev]"
 
     - name: Run tests with coverage
+      id: pytest
       run: |
-        pytest --cov=tickle --cov-report=term-missing --cov-report=xml
+        pytest --cov=tickle --cov-report=term-missing --cov-report=xml -v | tee pytest-output.txt
+        echo "tests=$(grep -oP '\d+(?= passed)' pytest-output.txt || echo '0')" >> $GITHUB_OUTPUT
+
+    - name: Create test count badge
+      if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+      uses: schneegans/dynamic-badges-action@v1.7.0
+      with:
+        auth: ${{ secrets.GIST_SECRET }}
+        gistID: 38120414da63546897e889745fcb37c0
+        filename: tickle-tests.json
+        label: tests
+        message: ${{ steps.pytest.outputs.tests }} passed
+        color: brightgreen
 
     - name: Upload coverage to Codecov
       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
