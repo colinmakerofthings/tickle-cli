@@ -11,6 +11,7 @@ from tickle.output import (
     MarkdownFormatter,
     TextFormatter,
     display_summary_panel,
+    get_formatter,
 )
 
 
@@ -261,6 +262,30 @@ class TestFormatters:
 
         # Order should match input
         assert pos_a < pos_b < pos_c
+
+
+class TestGetFormatter:
+    """Test get_formatter factory function."""
+
+    def test_get_formatter_text(self):
+        """Test getting text formatter."""
+        formatter = get_formatter("text")
+        assert isinstance(formatter, TextFormatter)
+
+    def test_get_formatter_json(self):
+        """Test getting JSON formatter."""
+        formatter = get_formatter("json")
+        assert isinstance(formatter, JSONFormatter)
+
+    def test_get_formatter_markdown(self):
+        """Test getting Markdown formatter."""
+        formatter = get_formatter("markdown")
+        assert isinstance(formatter, MarkdownFormatter)
+
+    def test_get_formatter_unknown_raises(self):
+        """Test that unknown format type raises ValueError."""
+        with pytest.raises(ValueError, match="Unknown format type: invalid"):
+            get_formatter("invalid")
 
 
 class TestDisplaySummaryPanel:

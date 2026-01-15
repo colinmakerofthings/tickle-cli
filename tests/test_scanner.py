@@ -400,3 +400,26 @@ class TestScanDirectorySorting:
             assert tasks[1].marker == "BUG"
 
 
+class TestScanDirectoryErrorHandling:
+    """Test error handling in scan_directory."""
+
+    def test_scan_directory_handles_unreadable_files(self):
+        """Test that unreadable files are silently skipped."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+
+            # Create a normal readable file
+            (tmpdir_path / "readable.py").write_text("# TODO: Task\n")
+
+            # Create a binary file that will fail UTF-8 decoding
+            binary_file = tmpdir_path / "binary.dat"
+            binary_file.write_bytes(b'\x80\x81\x82\x83\x84')  # Invalid UTF-8
+
+            # Should scan successfully, skipping the binary file
+            tasks = scan_directory(str(tmpdir_path))
+
+            # Should only find the TODO in the readable file
+            assert len(tasks) == 1
+            assert tasks[0].marker == "TODO"
+            assert "readable.py" in tasks[0].file
+
