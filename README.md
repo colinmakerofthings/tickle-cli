@@ -141,6 +141,17 @@ python -m tickle --sort author
 
 This groups tasks alphabetically by author name, making it easy to see who wrote each TODO. Requires git blame to be enabled (default).
 
+Reverse any sort order:
+
+```bash
+python -m tickle --sort age --reverse
+```
+
+The `--reverse` flag reverses any sort order. Examples:
+- `--sort age --reverse` shows newest tasks first
+- `--sort author --reverse` shows authors in reverse alphabetical order
+- `--sort marker --reverse` shows lowest priority markers first
+
 Scan for markdown checkboxes:
 
 ```bash

@@ -58,6 +58,11 @@ def main():
         )
     )
     parser.add_argument(
+        "--reverse",
+        action="store_true",
+        help="Reverse the sort order"
+    )
+    parser.add_argument(
         "--include-hidden",
         action="store_true",
         help="Include hidden directories (starting with .) in scan"
@@ -97,6 +102,7 @@ def main():
         markers=markers,
         ignore_patterns=ignore_patterns,
         sort_by=args.sort,
+        reverse_sort=args.reverse,
         ignore_hidden=not args.include_hidden,
         enable_git_blame=not args.no_blame
     )

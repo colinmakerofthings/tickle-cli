@@ -48,6 +48,7 @@ def scan_directory(
     ignore_patterns: list[str] | None = None,
     detector: Detector | None = None,
     sort_by: str = "file",
+    reverse_sort: bool = False,
     ignore_hidden: bool = True,
     enable_git_blame: bool = True
 ) -> list[Task]:
@@ -60,6 +61,7 @@ def scan_directory(
         detector: Detector instance to use for finding tasks. If None, creates a CommentMarkerDetector
                   using the provided markers.
         sort_by: Sort method - "file" (by file and line, default) or "marker" (by marker priority)
+        reverse_sort: Reverse the sort order (default: False)
         ignore_hidden: Whether to ignore hidden directories starting with . (default: True)
         enable_git_blame: Whether to enrich tasks with git blame information (default: True)
 
@@ -115,7 +117,7 @@ def scan_directory(
 
     # Sort by specified method
     sort_key = get_sort_key(sort_by)
-    results.sort(key=sort_key)
+    results.sort(key=sort_key, reverse=reverse_sort)
     return results
 
 
