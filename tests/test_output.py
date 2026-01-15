@@ -6,7 +6,12 @@ import re
 import pytest
 
 from tickle.models import Task
-from tickle.output import JSONFormatter, MarkdownFormatter, TextFormatter
+from tickle.output import (
+    JSONFormatter,
+    MarkdownFormatter,
+    TextFormatter,
+    display_summary_panel,
+)
 
 
 def strip_ansi(text):
@@ -256,3 +261,113 @@ class TestFormatters:
 
         # Order should match input
         assert pos_a < pos_b < pos_c
+
+
+class TestDisplaySummaryPanel:
+    """Test display_summary_panel function."""
+
+    @pytest.fixture
+    def sample_tasks(self):
+        """Create sample Task objects for testing."""
+        return [
+            Task(file="src/main.py", line=5, marker="TODO", text="# TODO: Implement feature"),
+            Task(file="src/main.py", line=12, marker="FIXME", text="# FIXME: Fix bug"),
+            Task(file="tests/test.py", line=3, marker="BUG", text="# BUG: Known issue"),
+            Task(file="src/utils.py", line=8, marker="TODO", text="# TODO: Add tests"),
+        ]
+
+    @pytest.fixture
+    def single_task(self):
+        """Single task for minimal testing."""
+        return [Task(file="app.py", line=1, marker="NOTE", text="# NOTE: Remember this")]
+
+    @pytest.fixture
+    def empty_tasks(self):
+        """Return empty task list."""
+        return []
+
+    def test_display_panel_with_tasks(self, sample_tasks, capsys):
+        """Test display_summary_panel shows correct summary."""
+        display_summary_panel(sample_tasks)
+        captured = capsys.readouterr()
+
+        # Should contain total count
+        assert "4 tasks" in captured.out
+        # Should contain file count
+        assert "3 files" in captured.out
+        # Should contain task summary title
+        assert "Task Summary" in captured.out
+
+    def test_display_panel_shows_marker_breakdown(self, sample_tasks, capsys):
+        """Test panel shows marker breakdown sorted by priority."""
+        display_summary_panel(sample_tasks)
+        captured = capsys.readouterr()
+
+        # Should show all markers present
+        assert "BUG" in captured.out
+        assert "FIXME" in captured.out
+        assert "TODO" in captured.out
+        # Should show counts
+        assert ": 1" in captured.out  # BUG: 1, FIXME: 1
+        assert ": 2" in captured.out  # TODO: 2
+
+    def test_display_panel_marker_priority_order(self, capsys):
+        """Test markers are displayed in priority order (BUG, FIXME, TODO, etc.)."""
+        tasks = [
+            Task(file="a.py", line=1, marker="NOTE", text="# NOTE: note"),
+            Task(file="a.py", line=2, marker="BUG", text="# BUG: bug"),
+            Task(file="a.py", line=3, marker="TODO", text="# TODO: todo"),
+        ]
+        display_summary_panel(tasks)
+        captured = capsys.readouterr()
+
+        # Find positions of markers
+        bug_pos = captured.out.index("BUG")
+        todo_pos = captured.out.index("TODO")
+        note_pos = captured.out.index("NOTE")
+
+        # Should be in priority order: BUG < TODO < NOTE
+        assert bug_pos < todo_pos < note_pos
+
+    def test_display_panel_empty_tasks(self, empty_tasks, capsys):
+        """Test display_summary_panel with empty task list does nothing."""
+        display_summary_panel(empty_tasks)
+        captured = capsys.readouterr()
+
+        # Should not display anything for empty tasks
+        assert captured.out == ""
+
+    def test_display_panel_single_task_singular(self, single_task, capsys):
+        """Test display_summary_panel uses singular form for single task."""
+        display_summary_panel(single_task)
+        captured = capsys.readouterr()
+
+        # Should use singular forms
+        assert "1 task in 1 file" in captured.out
+
+    def test_display_panel_multiple_files_plural(self, sample_tasks, capsys):
+        """Test display_summary_panel uses plural forms correctly."""
+        display_summary_panel(sample_tasks)
+        captured = capsys.readouterr()
+
+        # Should use plural forms
+        assert "tasks" in captured.out
+        assert "files" in captured.out
+
+    def test_display_panel_only_nonzero_markers(self, capsys):
+        """Test panel only shows markers with non-zero counts."""
+        tasks = [
+            Task(file="a.py", line=1, marker="TODO", text="# TODO: task"),
+            Task(file="a.py", line=2, marker="BUG", text="# BUG: bug"),
+        ]
+        display_summary_panel(tasks)
+        captured = capsys.readouterr()
+
+        # Should show TODO and BUG
+        assert "TODO" in captured.out
+        assert "BUG" in captured.out
+        # Should not show other markers like FIXME, HACK, NOTE, CHECKBOX
+        assert "FIXME" not in captured.out
+        assert "HACK" not in captured.out
+        assert "NOTE" not in captured.out
+        assert "CHECKBOX" not in captured.out

@@ -5,8 +5,12 @@ import json
 from abc import ABC, abstractmethod
 
 from colorama import Fore, Style
+from rich import box
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 
-from tickle.models import Task
+from tickle.models import MARKER_PRIORITY, Task
 
 # Marker-specific color mapping
 MARKER_COLORS = {
@@ -113,17 +117,14 @@ def get_formatter(format_type: str) -> Formatter:
     return formatter_class()
 
 
-def generate_stats(tasks: list[Task]) -> str:
-    """Generate summary statistics for tasks.
+def display_summary_panel(tasks: list[Task]) -> None:
+    """Display a rich panel with task summary statistics.
 
     Args:
         tasks: List of Task objects to analyze.
-
-    Returns:
-        Formatted string with statistics summary.
     """
     if not tasks:
-        return "No tasks found!"
+        return
 
     # Total count
     total = len(tasks)
@@ -133,29 +134,57 @@ def generate_stats(tasks: list[Task]) -> str:
     for task in tasks:
         marker_counts[task.marker] = marker_counts.get(task.marker, 0) + 1
 
-    # Count by file
-    file_counts = {}
-    for task in tasks:
-        file_counts[task.file] = file_counts.get(task.file, 0) + 1
+    # Count unique files
+    unique_files = len({task.file for task in tasks})
 
-    # Sort markers and files by count (descending)
-    sorted_markers = sorted(marker_counts.items(), key=lambda x: x[1], reverse=True)
-    sorted_files = sorted(file_counts.items(), key=lambda x: x[1], reverse=True)
+    # Map colorama colors to rich styles
+    color_map = {
+        "TODO": "blue",
+        "FIXME": "yellow",
+        "BUG": "red",
+        "NOTE": "cyan",
+        "HACK": "magenta",
+        "CHECKBOX": "green",
+    }
 
-    # Build output
-    lines = []
-    lines.append(f"Total Tasks: {total}")
+    # Build panel content
+    content = Text()
 
-    # Marker breakdown with colors
+    # First line: Total tasks and files
+    file_word = "file" if unique_files == 1 else "files"
+    task_word = "task" if total == 1 else "tasks"
+    content.append(f"Total: {total} {task_word} in {unique_files} {file_word}\n")
+
+    # Second line: Marker breakdown sorted by priority
+    # Get markers sorted by priority
+    sorted_markers = sorted(
+        marker_counts.items(),
+        key=lambda x: (MARKER_PRIORITY.get(x[0], 999), x[0])
+    )
+
+    # Build marker breakdown with colors (only non-zero markers)
     marker_parts = []
     for marker, count in sorted_markers:
-        color = MARKER_COLORS.get(marker, Fore.WHITE)
-        marker_parts.append(f"{color}{marker}{Style.RESET_ALL}: {count}")
-    lines.append(", ".join(marker_parts))
+        if count > 0:
+            text_part = Text()
+            style = color_map.get(marker, "white")
+            text_part.append(f"{marker}", style=style)
+            text_part.append(f": {count}")
+            marker_parts.append(text_part)
 
-    # Top files (show top 5)
-    top_files = sorted_files[:5]
-    file_parts = [f"{file} ({count})" for file, count in top_files]
-    lines.append(f"Top Files: {', '.join(file_parts)}")
+    # Join marker parts with " | "
+    for i, part in enumerate(marker_parts):
+        if i > 0:
+            content.append(" | ")
+        content.append(part)
 
-    return "\n".join(lines)
+    # Create and display panel
+    panel = Panel(
+        content,
+        title="Task Summary",
+        box=box.SQUARE,
+        expand=False
+    )
+
+    console = Console(legacy_windows=False)
+    console.print(panel)

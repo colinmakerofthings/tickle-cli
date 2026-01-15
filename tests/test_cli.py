@@ -159,11 +159,12 @@ class TestCLI:
                 main()
                 captured = capsys.readouterr()
 
-                # Find positions of each marker in output
+                # Find positions of each marker in output (skip panel lines by looking for file paths)
                 lines = captured.out.split("\n")
-                bug_line = next(i for i, line in enumerate(lines) if "BUG" in line)
-                fixme_line = next(i for i, line in enumerate(lines) if "FIXME" in line)
-                todo_line = next(i for i, line in enumerate(lines) if "TODO" in line)
+                task_lines = [line for line in lines if "test.py" in line]
+                bug_line = next(i for i, line in enumerate(task_lines) if "BUG" in line)
+                fixme_line = next(i for i, line in enumerate(task_lines) if "FIXME" in line)
+                todo_line = next(i for i, line in enumerate(task_lines) if "TODO" in line)
 
                 # Should be in priority order: BUG, FIXME, TODO
                 assert bug_line < fixme_line < todo_line
@@ -206,4 +207,92 @@ class TestCLI:
                 # Should be sorted by file (a.py before z.py)
                 assert a_py_line < z_py_line
 
+
+class TestSummaryPanel:
+    """Test cases for the summary panel feature."""
+
+    def test_panel_appears_in_text_mode(self, sample_repo, capsys):
+        """Test that summary panel appears in text format."""
+        with mock.patch("sys.argv", ["tickle", str(sample_repo), "--format", "text"]):
+            main()
+            captured = capsys.readouterr()
+
+            # Panel should appear
+            assert "Task Summary" in captured.out
+            assert "tasks" in captured.out
+            # sample_repo has 1 file, so check for singular
+            assert "file" in captured.out
+
+    def test_panel_not_in_json_mode(self, sample_repo, capsys):
+        """Test that summary panel does not appear in JSON format."""
+        with mock.patch("sys.argv", ["tickle", str(sample_repo), "--format", "json"]):
+            main()
+            captured = capsys.readouterr()
+
+            # Panel should not appear
+            assert "Task Summary" not in captured.out
+            # Should be valid JSON
+            data = json.loads(captured.out)
+            assert isinstance(data, list)
+
+    def test_panel_not_in_markdown_mode(self, sample_repo, capsys):
+        """Test that summary panel does not appear in Markdown format."""
+        with mock.patch("sys.argv", ["tickle", str(sample_repo), "--format", "markdown"]):
+            main()
+            captured = capsys.readouterr()
+
+            # Panel should not appear (no emoji or "Task Summary")
+            assert "📋" not in captured.out
+            # Should start with markdown header
+            assert "# Outstanding Tasks" in captured.out
+
+    def test_panel_not_shown_when_no_tasks(self, capsys):
+        """Test that summary panel doesn't appear when no tasks found."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with mock.patch("sys.argv", ["tickle", tmpdir, "--format", "text"]):
+                main()
+                captured = capsys.readouterr()
+
+                # Panel should not appear
+                assert "Task Summary" not in captured.out
+                # Should show normal empty message
+                assert "No tasks found!" in captured.out
+
+    def test_panel_shows_correct_counts(self, capsys):
+        """Test panel displays accurate task and file counts."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "file1.py").write_text("# TODO: Task 1\n# TODO: Task 2\n")
+            (tmpdir_path / "file2.py").write_text("# FIXME: Task 3\n")
+
+            with mock.patch("sys.argv", ["tickle", tmpdir]):
+                main()
+                captured = capsys.readouterr()
+
+                # Should show 3 tasks in 2 files
+                assert "3 tasks" in captured.out
+                assert "2 files" in captured.out
+
+    def test_panel_shows_marker_breakdown(self, capsys):
+        """Test panel shows breakdown of markers."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text(
+                "# TODO: Task 1\n"
+                "# TODO: Task 2\n"
+                "# BUG: Task 3\n"
+                "# FIXME: Task 4\n"
+            )
+
+            with mock.patch("sys.argv", ["tickle", tmpdir]):
+                main()
+                captured = capsys.readouterr()
+
+                # Should show all marker types
+                assert "TODO" in captured.out
+                assert "BUG" in captured.out
+                assert "FIXME" in captured.out
+                # Should show counts (looking for ": 2" for TODO)
+                assert ": 2" in captured.out
+                assert ": 1" in captured.out
 
