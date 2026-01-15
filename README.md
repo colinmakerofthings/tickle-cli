@@ -4,8 +4,12 @@
 
 <!-- badges: start -->
 ![Project Status: Work In Progress](https://www.repostatus.org/badges/1.0.0/wip.svg)
+![Python Version](https://img.shields.io/badge/python-3.10%2B-blue)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
-![Python](https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white)
+![Coverage](https://img.shields.io/badge/coverage-95%25-brightgreen)
+![Tests](https://img.shields.io/badge/tests-118%20passed-brightgreen)
+![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-000000.svg)
+![Build Status](https://img.shields.io/github/actions/workflow/status/colinmakerofthings/tickle-cli/test.yml?label=tests)
 <!-- badges: end -->
 
 A lightweight, cross-platform tool that scans repositories for outstanding developer tasks.
