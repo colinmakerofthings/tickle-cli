@@ -1,0 +1,27 @@
+# tickle configuration file
+# See https://github.com/colinmakerofthings/tickle-cli for full documentation
+
+[tickle]
+# Task markers to search for (comment-style markers)
+markers = ["TODO", "FIXME", "BUG", "NOTE", "HACK", "CHECKBOX"]
+
+# Patterns to ignore (supports glob patterns)
+ignore = [
+    "*.min.js",
+    "*.min.css",
+    "node_modules",
+    "dist",
+    "build",
+    "__pycache__",
+    ".git",
+    "htmlcov"
+]
+
+# Uncomment to set default output format
+# format = "tree"  # options: tree, json, markdown
+
+# Uncomment to set default sort method
+# sort = "file"  # options: file, marker, age, author
+
+# Uncomment to enable git blame by default (default: true)
+# git_blame = true

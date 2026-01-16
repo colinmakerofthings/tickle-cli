@@ -1,0 +1,120 @@
+# tickle.toml.example
+# Complete example configuration file for tickle
+# Copy this file to tickle.toml (or .tickle.toml) in your project root to use it
+
+[tickle]
+# Task markers to search for in code comments
+# These are the keywords that tickle will look for when scanning your code
+# Default: ["TODO", "FIXME", "BUG", "NOTE", "HACK", "CHECKBOX"]
+markers = ["TODO", "FIXME", "BUG", "NOTE", "HACK", "CHECKBOX"]
+
+# File and directory patterns to ignore
+# Supports glob-style patterns (*, ?, [])
+# Patterns are matched against both full paths and file names
+ignore = [
+    # Build outputs
+    "dist",
+    "build",
+    "*.min.js",
+    "*.min.css",
+    
+    # Dependencies
+    "node_modules",
+    "vendor",
+    "venv",
+    ".venv",
+    
+    # Python cache
+    "__pycache__",
+    "*.pyc",
+    "*.pyo",
+    
+    # Version control
+    ".git",
+    ".svn",
+    
+    # IDE and editor files
+    ".vscode",
+    ".idea",
+    
+    # OS files
+    ".DS_Store",
+    "Thumbs.db",
+    
+    # Test coverage
+    "htmlcov",
+    ".coverage",
+    
+    # Documentation builds
+    "docs/_build",
+    "site"
+]
+
+# Default output format
+# Options: "tree", "json", "markdown"
+# Default: "tree"
+format = "tree"
+
+# Default sort method
+# Options: "file" (by file path and line number),
+#          "marker" (by marker type priority: BUG > FIXME > TODO > HACK > NOTE > CHECKBOX),
+#          "age" (oldest first by git commit date),
+#          "author" (alphabetically by author name)
+# Default: "file"
+sort = "file"
+
+# Reverse the sort order
+# Set to true to reverse any sort method (newest first, Z-A, etc.)
+# Default: false
+reverse = false
+
+# Include hidden directories in scan
+# By default, directories starting with . are ignored (except .tickle.toml)
+# Set to true to scan hidden directories like .github, .config, etc.
+# Default: false
+include_hidden = false
+
+# Enable git blame enrichment
+# When true, tickle adds author, date, and commit info to each task
+# Set to false for faster scanning without git information
+# Default: true
+git_blame = true
+
+# Show verbose git information
+# When true (and git_blame is enabled), shows full commit hash and message
+# Default: false
+git_verbose = false
+
+# Collapse tree view
+# When true, only shows directory structure with task counts (hides task details)
+# Useful for getting a high-level overview of where tasks are concentrated
+# Default: false
+tree_collapse = false
+
+
+# ============================================================================
+# COMMON CONFIGURATION EXAMPLES
+# ============================================================================
+
+# Example 1: Minimal configuration (ignore build artifacts only)
+# [tickle]
+# ignore = ["node_modules", "dist", "build", "__pycache__"]
+
+# Example 2: Focus on critical issues only
+# [tickle]
+# markers = ["BUG", "FIXME"]
+# sort = "marker"
+
+# Example 3: Quick scan without git info
+# [tickle]
+# git_blame = false
+
+# Example 4: Find all markdown checkboxes
+# [tickle]
+# markers = ["CHECKBOX"]
+# format = "markdown"
+
+# Example 5: Team review (oldest TODOs first)
+# [tickle]
+# sort = "age"
+# git_verbose = true

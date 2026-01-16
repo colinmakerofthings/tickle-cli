@@ -191,3 +191,165 @@ Combine options:
 ```bash
 ticklе /path/to/repo --markers TODO,FIXME --ignore "tests,venv" --sort marker --reverse --tree-collapse
 ```
+
+## Configuration
+
+Tired of typing the same flags every time? Configuration files let you set persistent defaults for ignore patterns, markers, output format, and more. Share configuration across your team via `pyproject.toml`, or maintain personal preferences in your user config.
+
+### Quick Start
+
+Create a configuration file in your project:
+
+```bash
+tickle init
+```
+
+This creates a `tickle.toml` file in the current directory with sensible defaults. Edit this file to customize your ignore patterns, markers, and other settings.
+
+View your effective configuration:
+
+```bash
+tickle config show
+```
+
+This shows which config file is being used and the final merged settings.
+
+### Configuration Files
+
+tickle supports multiple configuration file locations with the following precedence (highest to lowest):
+
+1. **Explicit config** (via `--config` flag)
+2. **Project-level**: `tickle.toml` or `.tickle.toml` in current directory
+3. **pyproject.toml**: `[tool.tickle]` section in `pyproject.toml`
+4. **User-level**:
+   - Linux/Mac: `~/.config/tickle/tickle.toml`
+   - Windows: `%APPDATA%\tickle\tickle.toml`
+
+CLI arguments always take precedence over configuration files.
+
+### Minimal Configuration Example
+
+A typical `tickle.toml` for ignoring common build artifacts:
+
+```toml
+[tickle]
+# Task markers to search for
+markers = ["TODO", "FIXME", "BUG", "NOTE", "HACK", "CHECKBOX"]
+
+# Patterns to ignore (glob-style)
+ignore = [
+    "*.min.js",
+    "*.min.css",
+    "node_modules",
+    "dist",
+    "build",
+    "__pycache__",
+    ".git"
+]
+```
+
+### Comprehensive Configuration Example
+
+See [tickle.toml.example](tickle.toml.example) for a complete example with all available options and comments.
+
+All available configuration options:
+
+```toml
+[tickle]
+# Task markers to search for
+markers = ["TODO", "FIXME", "BUG", "NOTE", "HACK", "CHECKBOX"]
+
+# File/directory patterns to ignore
+ignore = ["node_modules", "dist", "*.min.js"]
+
+# Default output format: "tree", "json", or "markdown"
+format = "tree"
+
+# Default sort method: "file", "marker", "age", or "author"
+sort = "file"
+
+# Reverse sort order
+reverse = false
+
+# Include hidden directories (starting with .)
+include_hidden = false
+
+# Enable git blame enrichment (author, date, commit info)
+git_blame = true
+
+# Show verbose git information (full commit hash and message)
+git_verbose = false
+
+# Collapse tree view (show only directory structure with counts)
+tree_collapse = false
+```
+
+### Configuration Options Reference
+
+| Option | Type | Default | Description | CLI Flag |
+| ------ | ---- | ------- | ----------- | -------- |
+| `markers` | list[str] | `["TODO", "FIXME", "BUG", "NOTE", "HACK", "CHECKBOX"]` | Task markers to search for | `--markers` |
+| `ignore` | list[str] | `[]` | File/directory patterns to ignore | `--ignore` |
+| `format` | str | `"tree"` | Output format (`tree`, `json`, `markdown`) | `--format` |
+| `sort` | str | `"file"` | Sort method (`file`, `marker`, `age`, `author`) | `--sort` |
+| `reverse` | bool | `false` | Reverse sort order | `--reverse` |
+| `include_hidden` | bool | `false` | Include hidden directories | `--include-hidden` |
+| `git_blame` | bool | `true` | Enable git blame enrichment | `--no-blame` (inverted) |
+| `git_verbose` | bool | `false` | Show full git commit info | `--git-verbose` |
+| `tree_collapse` | bool | `false` | Show only directory structure | `--tree-collapse` |
+
+### Troubleshooting Configuration
+
+**Config not loading?**
+
+Use `tickle config show` to see which config file is being used and verify your settings.
+
+**Values not applying?**
+
+Remember that CLI arguments always override config file values. If you pass `--markers TODO`, it will override the `markers` setting in your config file.
+
+**Unknown keys warning?**
+
+tickle will warn about unrecognized configuration keys but will continue running. Check your spelling and refer to the options table above.
+
+### Real-World Examples
+
+#### Example 1: Ignore build artifacts in a Node.js project
+
+```toml
+[tickle]
+ignore = [
+    "node_modules",
+    "dist",
+    "build",
+    "*.min.js",
+    "*.min.css",
+    "coverage"
+]
+```
+
+#### Example 2: Focus on critical issues only
+
+```toml
+[tickle]
+markers = ["BUG", "FIXME"]
+sort = "marker"
+```
+
+#### Example 3: Team-shared configuration in pyproject.toml
+
+```toml
+[tool.tickle]
+markers = ["TODO", "FIXME", "BUG", "HACK"]
+ignore = ["dist", "build", "__pycache__", "*.egg-info", ".venv"]
+sort = "age"  # Show oldest TODOs first for tech debt review
+git_verbose = true  # Show full commit context
+```
+
+#### Example 4: Fast scanning without git info
+
+```toml
+[tickle]
+git_blame = false  # Skip git blame for faster scanning
+tree_collapse = true  # Show only counts
+```
