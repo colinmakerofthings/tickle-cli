@@ -51,7 +51,7 @@ def get_git_root(filepath: str) -> str | None:
         file_dir = os.path.dirname(os.path.abspath(filepath))
 
         result = subprocess.run(
-            ["git", "rev-parse", "--show-toplevel"],
+            ["git", "rev-parse", "--show-toplevel"],  # noqa: S607
             cwd=file_dir,
             capture_output=True,
             text=True,
@@ -221,8 +221,8 @@ def get_file_blame(filepath: str) -> dict[int, BlameInfo]:
         abs_filepath = os.path.abspath(filepath)
         rel_filepath = os.path.relpath(abs_filepath, git_root)
 
-        result = subprocess.run(
-            ["git", "blame", "--porcelain", rel_filepath],
+        result = subprocess.run(  # noqa: S603
+            ["git", "blame", "--porcelain", rel_filepath],  # noqa: S607
             cwd=git_root,
             capture_output=True,
             text=True,
