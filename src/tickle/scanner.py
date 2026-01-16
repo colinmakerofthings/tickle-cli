@@ -107,8 +107,8 @@ def scan_directory(
                     # Use detector to find tasks in this line
                     tasks = detector.detect(line, line_num, str(filepath))
                     results.extend(tasks)
-        except Exception:
-            # Ignore files that can't be read as text
+        except Exception:  # noqa: S110
+            # Ignore files that can't be read as text (by design - silent failure for binary/locked files)
             pass
 
     # Enrich with git blame if requested and in a git repo

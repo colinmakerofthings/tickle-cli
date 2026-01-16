@@ -6,6 +6,7 @@
 ![Tests](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/colinmakerofthings/38120414da63546897e889745fcb37c0/raw/tickle-tests.json)
 [![Coverage](https://codecov.io/gh/colinmakerofthings/tickle-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/colinmakerofthings/tickle-cli)
 ![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-d7ff64.svg)
+![Security: ruff](https://img.shields.io/badge/security-ruff%20S-orange)
 <!-- badges: end -->
 
 A lightweight, cross-platform tool that provides **hierarchical visualization** of TODOs, code comments, and markdown checkboxes across your repositories and personal notes.

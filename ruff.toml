@@ -16,6 +16,7 @@ exclude = [
     "build",
 ]
 
+[lint]
 # Extended set of rule codes for quality code
 select = [
     "E",      # pycodestyle errors
@@ -27,12 +28,16 @@ select = [
     "B",      # flake8-bugbear
     "C4",     # flake8-comprehensions
     "RUF",    # ruff-specific rules
+    "S",      # flake8-bandit (security)
 ]
 
 # Rules to ignore
 ignore = [
     "E501",   # Line too long (handled by formatter)
 ]
+
+[lint.per-file-ignores]
+"tests/**" = ["S101"]  # Allow assert in tests
 
 [lint.isort]
 # Organize imports like isort does
