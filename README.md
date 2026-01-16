@@ -145,6 +145,14 @@ tickle --sort author
 
 This groups tasks alphabetically by author name, making it easy to see who wrote each TODO. Requires git blame to be enabled (default).
 
+Reverse any sort order:
+
+```bash
+tickle --sort marker --reverse
+```
+
+The `--reverse` flag inverts any sort order. Use it with `--sort file` (Z→A paths), `--sort marker` (lowest to highest priority), `--sort age` (newest first), or `--sort author` (Z→A names).
+
 Scan for markdown checkboxes:
 
 ```bash
@@ -180,5 +188,5 @@ This shows additional git details including the commit hash and commit message f
 Combine options:
 
 ```bash
-tickle /path/to/repo --markers TODO,FIXME --ignore "tests,venv" --tree-collapse
+ticklе /path/to/repo --markers TODO,FIXME --ignore "tests,venv" --sort marker --reverse --tree-collapse
 ```
