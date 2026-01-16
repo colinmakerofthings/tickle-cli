@@ -590,7 +590,7 @@ class TestBooleanValidation:
 
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                config = load_config(config_path)
+                load_config(config_path)
                 assert any("git_verbose" in str(warning.message).lower() for warning in w)
 
     def test_load_config_invalid_tree_collapse_type(self):
@@ -601,7 +601,7 @@ class TestBooleanValidation:
 
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                config = load_config(config_path)
+                load_config(config_path)
                 assert any("tree_collapse" in str(warning.message).lower() for warning in w)
 
     def test_load_config_invalid_git_blame_type(self):
@@ -612,7 +612,7 @@ class TestBooleanValidation:
 
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
-                config = load_config(config_path)
+                load_config(config_path)
                 assert any("git_blame" in str(warning.message).lower() for warning in w)
 
 
