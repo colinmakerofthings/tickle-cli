@@ -113,7 +113,7 @@ def main():
         subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
         # Subcommand: init
-        init_parser = subparsers.add_parser("init", help="Create a tickle.toml configuration file")
+        subparsers.add_parser("init", help="Create a tickle.toml configuration file")
 
         # Subcommand: config show
         config_parser = subparsers.add_parser("config", help="Configuration management")
