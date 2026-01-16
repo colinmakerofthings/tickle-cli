@@ -553,3 +553,154 @@ format = "json"
             assert merged["markers"] == ["BUG"]
             assert merged["ignore_patterns"] == ["build"]
             assert merged["format"] == "markdown"
+
+
+class TestBooleanValidation:
+    """Test cases for boolean field validation."""
+
+    def test_load_config_invalid_reverse_type(self):
+        """Test warning for invalid reverse type."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "tickle.toml"
+            config_path.write_text('[tickle]\nreverse = "true"\n')
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                config = load_config(config_path)
+                assert any("reverse" in str(warning.message).lower() for warning in w)
+                assert config.reverse is None  # Invalid value results in None
+
+    def test_load_config_invalid_include_hidden_type(self):
+        """Test warning for invalid include_hidden type."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "tickle.toml"
+            config_path.write_text('[tickle]\ninclude_hidden = 1\n')
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                config = load_config(config_path)
+                assert any("include_hidden" in str(warning.message).lower() for warning in w)
+                assert config.include_hidden is None  # Invalid value results in None
+
+    def test_load_config_invalid_git_verbose_type(self):
+        """Test warning for invalid git_verbose type."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "tickle.toml"
+            config_path.write_text('[tickle]\ngit_verbose = "yes"\n')
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                config = load_config(config_path)
+                assert any("git_verbose" in str(warning.message).lower() for warning in w)
+
+    def test_load_config_invalid_tree_collapse_type(self):
+        """Test warning for invalid tree_collapse type."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "tickle.toml"
+            config_path.write_text('[tickle]\ntree_collapse = []\n')
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                config = load_config(config_path)
+                assert any("tree_collapse" in str(warning.message).lower() for warning in w)
+
+    def test_load_config_invalid_git_blame_type(self):
+        """Test warning for invalid git_blame type."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_path = Path(tmpdir) / "tickle.toml"
+            config_path.write_text('[tickle]\ngit_blame = "false"\n')
+
+            with warnings.catch_warnings(record=True) as w:
+                warnings.simplefilter("always")
+                config = load_config(config_path)
+                assert any("git_blame" in str(warning.message).lower() for warning in w)
+
+
+class TestMergeEdgeCases:
+    """Test edge cases in config merging."""
+
+    def test_merge_config_empty_ignore_string(self):
+        """Test merge handles empty ignore string."""
+        import argparse
+        config = TickleConfig()
+        args = argparse.Namespace(
+            markers="TODO,FIXME,BUG,NOTE,HACK,CHECKBOX",
+            ignore="",
+            format="tree",
+            sort="file",
+            reverse=False,
+            include_hidden=False,
+            no_blame=False,
+            git_verbose=False,
+            tree_collapse=False,
+            path="."
+        )
+
+        merged = merge_config_with_args(config, args)
+        assert merged["ignore_patterns"] == []
+
+    def test_merge_config_git_blame_combinations(self):
+        """Test various git_blame and no_blame combinations."""
+        import argparse
+
+        # Test: config.git_blame=True, args.no_blame=False
+        config = TickleConfig(git_blame=True)
+        args = argparse.Namespace(
+            markers="TODO",
+            ignore="",
+            format="tree",
+            sort="file",
+            reverse=False,
+            include_hidden=False,
+            no_blame=False,
+            git_verbose=False,
+            tree_collapse=False,
+            path="."
+        )
+        merged = merge_config_with_args(config, args)
+        assert merged["enable_git_blame"] is True
+
+        # Test: config.git_blame=False, args.no_blame=False (config wins)
+        config = TickleConfig(git_blame=False)
+        merged = merge_config_with_args(config, args)
+        assert merged["enable_git_blame"] is False
+
+        # Test: config.git_blame=True, args.no_blame=True (CLI wins)
+        args.no_blame = True
+        config = TickleConfig(git_blame=True)
+        merged = merge_config_with_args(config, args)
+        assert merged["enable_git_blame"] is False
+
+    def test_merge_config_whitespace_in_ignore(self):
+        """Test merge handles whitespace in ignore patterns."""
+        import argparse
+        config = TickleConfig()
+        args = argparse.Namespace(
+            markers="TODO",
+            ignore="  node_modules , dist  , build ",
+            format="tree",
+            sort="file",
+            reverse=False,
+            include_hidden=False,
+            no_blame=False,
+            git_verbose=False,
+            tree_collapse=False,
+            path="."
+        )
+
+        merged = merge_config_with_args(config, args)
+        assert "node_modules" in merged["ignore_patterns"]
+        assert "dist" in merged["ignore_patterns"]
+        assert "build" in merged["ignore_patterns"]
+
+
+class TestWindowsEdgeCases:
+    """Test Windows-specific edge cases."""
+
+    def test_windows_without_appdata(self):
+        """Test Windows config path when APPDATA is not set."""
+        with mock.patch("sys.platform", "win32"):
+            with mock.patch.dict(os.environ, {}, clear=True):
+                # Returns None when APPDATA not available on Windows
+                path = get_user_config_path()
+                assert path is None

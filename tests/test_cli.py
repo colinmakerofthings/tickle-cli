@@ -283,3 +283,160 @@ class TestSummaryPanel:
                 assert ": 2" in captured.out
                 assert ": 1" in captured.out
 
+
+class TestConfigCommands:
+    """Test cases for config-related commands."""
+
+    def test_config_show_command_with_config_file(self, capsys):
+        """Test 'tickle config show' displays configuration from file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            config_file = Path(tmpdir) / "tickle.toml"
+            config_file.write_text(
+                '[tickle]\n'
+                'markers = ["TODO", "FIXME"]\n'
+                'ignore = ["node_modules", "dist"]\n'
+                'format = "json"\n'
+            )
+
+            with mock.patch("sys.argv", ["tickle", "config", "show", "--config", str(config_file)]):
+                main()
+                captured = capsys.readouterr()
+
+                assert "TODO" in captured.out
+                assert "FIXME" in captured.out
+                assert "node_modules" in captured.out
+                assert "json" in captured.out
+
+    def test_config_show_command_no_config(self, capsys):
+        """Test 'tickle config show' with no config file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            with mock.patch("sys.argv", ["tickle", "config", "show", tmpdir]):
+                main()
+                captured = capsys.readouterr()
+
+                # Should show defaults
+                assert "markers" in captured.out.lower() or "todo" in captured.out.lower()
+
+    def test_config_command_without_subcommand_shows_help(self, capsys):
+        """Test 'tickle config' without subcommand shows help."""
+        with mock.patch("sys.argv", ["tickle", "config"]):
+            main()
+            captured = capsys.readouterr()
+
+            # Should show help text
+            assert "show" in captured.out.lower() or "usage" in captured.out.lower()
+
+    def test_init_command_success(self, capsys):
+        """Test 'tickle init' creates config file."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            original_cwd = Path.cwd()
+            try:
+                import os
+                os.chdir(tmpdir)
+
+                with mock.patch("sys.argv", ["tickle", "init"]):
+                    main()
+                    captured = capsys.readouterr()
+
+                    assert Path("tickle.toml").exists()
+                    assert "Created" in captured.out
+            finally:
+                os.chdir(original_cwd)
+
+    def test_init_command_file_exists_error(self, capsys):
+        """Test 'tickle init' errors when file already exists."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            original_cwd = Path.cwd()
+            try:
+                import os
+                os.chdir(tmpdir)
+
+                # Create existing config file
+                Path("tickle.toml").write_text("[tickle]\n")
+
+                with mock.patch("sys.argv", ["tickle", "init"]):
+                    with pytest.raises(SystemExit) as exc:
+                        main()
+                    assert exc.value.code == 1
+
+                captured = capsys.readouterr()
+                assert "already exists" in captured.out
+            finally:
+                os.chdir(original_cwd)
+
+    def test_init_command_handles_write_error(self, capsys):
+        """Test 'tickle init' handles permission errors gracefully."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            original_cwd = Path.cwd()
+            try:
+                import os
+                os.chdir(tmpdir)
+
+                with mock.patch("pathlib.Path.write_text", side_effect=PermissionError("Access denied")):
+                    with mock.patch("sys.argv", ["tickle", "init"]):
+                        with pytest.raises(SystemExit) as exc:
+                            main()
+                        assert exc.value.code == 1
+
+                captured = capsys.readouterr()
+                assert "Error" in captured.out
+            finally:
+                os.chdir(original_cwd)
+
+    def test_scan_with_verbose_flag(self, capsys):
+        """Test --verbose flag shows config file being used."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text("# TODO: Test task\n")
+
+            # Create a config file
+            config_file = tmpdir_path / "tickle.toml"
+            config_file.write_text('[tickle]\nmarkers = ["TODO"]\n')
+
+            with mock.patch("sys.argv", ["tickle", str(tmpdir), "--verbose"]):
+                main()
+                captured = capsys.readouterr()
+
+                # Should show config path in stderr
+                output = captured.out + captured.err
+                assert "config" in output.lower() or "tickle.toml" in output
+
+    def test_scan_with_no_config_flag(self, capsys):
+        """Test --no-config flag ignores config files."""
+        with tempfile.TemporaryDirectory() as tmpdir:
+            tmpdir_path = Path(tmpdir)
+            (tmpdir_path / "test.py").write_text("# TODO: Test task\n# FIXME: Another\n")
+
+            # Create a config that would filter out TODO
+            config_file = tmpdir_path / "tickle.toml"
+            config_file.write_text('[tickle]\nmarkers = ["FIXME"]\n')
+
+            with mock.patch("sys.argv", ["tickle", str(tmpdir), "--no-config"]):
+                main()
+                captured = capsys.readouterr()
+
+                # Should still find TODO because config is ignored
+                assert "TODO" in captured.out
+
+
+class TestPlatformSpecific:
+    """Test platform-specific behavior."""
+
+    def test_windows_utf8_encoding(self):
+        """Test Windows UTF-8 stdout reconfiguration."""
+        with mock.patch("sys.platform", "win32"):
+            with mock.patch("sys.stdout.reconfigure") as mock_reconfig:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    with mock.patch("sys.argv", ["tickle", tmpdir]):
+                        main()
+                        mock_reconfig.assert_called_once_with(encoding="utf-8")
+
+    def test_non_windows_no_reconfigure(self):
+        """Test non-Windows platforms don't reconfigure encoding."""
+        with mock.patch("sys.platform", "linux"):
+            with mock.patch("sys.stdout.reconfigure") as mock_reconfig:
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    with mock.patch("sys.argv", ["tickle", tmpdir]):
+                        main()
+                        mock_reconfig.assert_not_called()
+
