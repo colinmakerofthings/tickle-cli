@@ -5,7 +5,6 @@ try:
     __version__ = version("tickle-cli")
 except PackageNotFoundError:
     # Fallback for development when not installed - read from pyproject.toml if it exists
-    import os
     from pathlib import Path
     _pyproject_path = Path(__file__).parent.parent.parent / "pyproject.toml"
     if _pyproject_path.is_file():
