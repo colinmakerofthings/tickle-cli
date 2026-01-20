@@ -136,17 +136,19 @@ class TreeFormatter(Formatter):
         "CHECKBOX": "green",
     }
 
-    def __init__(self, git_verbose: bool = False, show_details: bool = True, scan_directory: str = "."):
+    def __init__(self, git_verbose: bool = False, show_details: bool = True, scan_directory: str = ".", no_color: bool = False):
         """Initialize the tree formatter.
 
         Args:
             git_verbose: Whether to show full git commit info (hash and message)
             show_details: Whether to show individual task details (False shows counts only)
             scan_directory: Directory being scanned (used for root label)
+            no_color: Disable color/ANSI codes in output (for export)
         """
         self.git_verbose = git_verbose
         self.show_details = show_details
         self.scan_directory = scan_directory
+        self.no_color = no_color
 
     def format(self, tasks: list[Task]) -> str:
         """Format tasks as a hierarchical tree."""
@@ -157,7 +159,7 @@ class TreeFormatter(Formatter):
         tree = self._build_tree(tasks)
 
         # Render to string using Console
-        console = Console(legacy_windows=False)
+        console = Console(legacy_windows=False, color_system=None, force_terminal=not self.no_color, no_color=self.no_color)
         with console.capture() as capture:
             console.print(tree)
 
@@ -354,7 +356,8 @@ def get_formatter(
     format_type: str,
     git_verbose: bool = False,
     tree_collapse: bool = False,
-    scan_directory: str = "."
+    scan_directory: str = ".",
+    no_color: bool = False,
 ) -> Formatter:
     """Factory function to get the appropriate formatter.
 
@@ -363,6 +366,7 @@ def get_formatter(
         git_verbose: Whether to show full git commit info (hash and message)
         tree_collapse: Show only directory structure with counts (tree format only)
         scan_directory: Directory being scanned (tree format only)
+        no_color: Disable color/ANSI codes in output (for export)
 
     Returns:
         An instance of the appropriate Formatter subclass.
@@ -378,7 +382,8 @@ def get_formatter(
         return TreeFormatter(
             git_verbose=git_verbose,
             show_details=not tree_collapse,
-            scan_directory=scan_directory
+            scan_directory=scan_directory,
+            no_color=no_color
         )
     else:
         raise ValueError(f"Unknown format type: {format_type}")

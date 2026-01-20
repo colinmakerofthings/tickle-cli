@@ -192,6 +192,34 @@ Combine options:
 ticklе /path/to/repo --markers TODO,FIXME --ignore "tests,venv" --sort marker --reverse --tree-collapse
 ```
 
+## Exporting Output for Printing
+
+You can export tickle's output to a plain text file for easy printing or sharing. Use the `--export` flag:
+
+```bash
+tickle [options] --export output.txt
+```
+
+- The output will be saved to `output.txt` in plain text format.
+- If the file already exists, it will be overwritten (a warning will be shown).
+- After export, tickle will display a confirmation message with the file path.
+
+**Example:**
+
+```bash
+tickle --markers TODO,FIXME --export my_tasks.txt
+```
+
+You can then print the file using your operating system's tools. For example, on Windows:
+
+```bash
+notepad /p my_tasks.txt
+```
+
+Or open and print with any text editor.
+
+---
+
 ## Configuration
 
 Tired of typing the same flags every time? Configuration files let you set persistent defaults for ignore patterns, markers, output format, and more. Share configuration across your team via `pyproject.toml`, or maintain personal preferences in your user config.
