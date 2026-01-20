@@ -86,9 +86,18 @@ def handle_scan_command(args):
         git_verbose=merged["git_verbose"],
         tree_collapse=merged["tree_collapse"],
         scan_directory=merged["path"],
+        no_color=bool(getattr(args, "export", None)),
     )
     output = formatter.format(tasks)
-    print(output)
+    if hasattr(args, 'export') and args.export:
+        export_path = Path(args.export)
+        overwrite = export_path.exists()
+        export_path.write_text(output, encoding="utf-8")
+        if overwrite:
+            print(f"[tickle] Warning: Overwrote existing file: {export_path}")
+        print(f"[tickle] Output exported to: {export_path}")
+    else:
+        print(output)
 
 
 def main():
@@ -204,6 +213,11 @@ def main():
     )
     parser.add_argument(
         "--verbose", action="store_true", help="Show which config file is being used"
+    )
+    parser.add_argument(
+        "--export",
+        type=str,
+        help="Export output to a plain text file (overwrites if exists)"
     )
     parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
 
