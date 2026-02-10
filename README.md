@@ -7,6 +7,10 @@
 [![Coverage](https://codecov.io/gh/colinmakerofthings/tickle-cli/branch/main/graph/badge.svg)](https://codecov.io/gh/colinmakerofthings/tickle-cli)
 ![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-d7ff64.svg)
 ![Security: ruff](https://img.shields.io/badge/security-ruff%20S-orange)
+![PyPI](https://img.shields.io/pypi/v/tickle-cli)
+![Downloads](https://img.shields.io/pypi/dm/tickle-cli)
+![Build](https://github.com/colinmakerofthings/tickle-cli/actions/workflows/test.yml/badge.svg)
+![Platforms](https://img.shields.io/badge/platforms-windows%20%7C%20linux%20%7C%20macos-blue)
 <!-- badges: end -->
 
 A lightweight, cross-platform tool that provides **hierarchical visualization** of TODOs, code comments, and markdown checkboxes across your repositories and personal notes.
@@ -217,6 +221,27 @@ notepad /p my_tasks.txt
 ```
 
 Or open and print with any text editor.
+
+## Exporting Output as PDF
+
+You can export tickle's output to a color PDF file for easy sharing or printing. Use the `--export-pdf` flag:
+
+```bash
+tickle [options] --export-pdf output.pdf
+```
+
+- The output will be saved to `output.pdf` in color, matching the CLI's formatting.
+- Only the tree format is currently supported for PDF export.
+- The file will be A4, portrait, and will overwrite if it already exists.
+- After export, tickle will display a confirmation message with the file path.
+
+**Example:**
+
+```bash
+tickle --markers TODO,FIXME --export-pdf my_tasks.pdf
+```
+
+You can then open or print the PDF using any standard PDF viewer.
 
 ---
 

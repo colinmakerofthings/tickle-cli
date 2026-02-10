@@ -54,10 +54,7 @@ class CommentMarkerDetector(Detector):
         for marker in self.markers:
             if marker in line:
                 task = Task(
-                    file=filepath,
-                    line=line_num,
-                    marker=marker,
-                    text=line.strip()
+                    file=filepath, line=line_num, marker=marker, text=line.strip()
                 )
                 return [task]
 
@@ -70,8 +67,9 @@ class MarkdownCheckboxDetector(Detector):
     def __init__(self):
         """Initialize the markdown checkbox detector."""
         import re
+
         # Pattern matches: - [ ] or * [ ] (with optional space) and optional leading whitespace
-        self.pattern = re.compile(r'^\s*[-*]\s+\[\s*\]')
+        self.pattern = re.compile(r"^\s*[-*]\s+\[\s*\]")
 
     def detect(self, line: str, line_num: int, filepath: str) -> list[Task]:
         """Find unchecked markdown checkboxes in the line.
@@ -86,10 +84,7 @@ class MarkdownCheckboxDetector(Detector):
         """
         if self.pattern.match(line):
             task = Task(
-                file=filepath,
-                line=line_num,
-                marker="CHECKBOX",
-                text=line.strip()
+                file=filepath, line=line_num, marker="CHECKBOX", text=line.strip()
             )
             return [task]
         return []
@@ -124,7 +119,9 @@ class CompositeDetector(Detector):
         return results
 
 
-def create_detector(detector_type: str = "comment", markers: list[str] | None = None) -> Detector:
+def create_detector(
+    detector_type: str = "comment", markers: list[str] | None = None
+) -> Detector:
     """Factory function to create a detector instance.
 
     Args:

@@ -38,27 +38,32 @@ class TestGetGitRoot:
 
     def test_returns_root_when_in_git_repo(self):
         """Test that root path is returned when file is in a git repo."""
-        with patch("tickle.git_utils.is_git_available", return_value=True), \
-             patch("subprocess.run") as mock_run:
+        with (
+            patch("tickle.git_utils.is_git_available", return_value=True),
+            patch("subprocess.run") as mock_run,
+        ):
             mock_run.return_value = MagicMock(
-                returncode=0,
-                stdout="/home/user/project\n"
+                returncode=0, stdout="/home/user/project\n"
             )
             result = get_git_root("/home/user/project/src/file.py")
             assert result == "/home/user/project"
 
     def test_returns_none_when_not_in_git_repo(self):
         """Test that None is returned when file is not in a git repo."""
-        with patch("tickle.git_utils.is_git_available", return_value=True), \
-             patch("subprocess.run") as mock_run:
+        with (
+            patch("tickle.git_utils.is_git_available", return_value=True),
+            patch("subprocess.run") as mock_run,
+        ):
             mock_run.return_value = MagicMock(returncode=128)
             result = get_git_root("/some/path/file.py")
             assert result is None
 
     def test_returns_none_on_subprocess_error(self):
         """Test that None is returned when subprocess raises an error."""
-        with patch("tickle.git_utils.is_git_available", return_value=True), \
-             patch("subprocess.run", side_effect=OSError):
+        with (
+            patch("tickle.git_utils.is_git_available", return_value=True),
+            patch("subprocess.run", side_effect=OSError),
+        ):
             result = get_git_root("/some/path/file.py")
             assert result is None
 
@@ -175,26 +180,32 @@ class TestGetFileBlame:
 
     def test_returns_empty_when_not_in_git_repo(self):
         """Test that empty dict is returned when file is not in a git repo."""
-        with patch("tickle.git_utils.is_git_available", return_value=True), \
-             patch("tickle.git_utils.is_in_git_repo", return_value=False):
+        with (
+            patch("tickle.git_utils.is_git_available", return_value=True),
+            patch("tickle.git_utils.is_in_git_repo", return_value=False),
+        ):
             result = get_file_blame("/some/file.py")
             assert result == {}
 
     def test_returns_empty_when_file_should_be_skipped(self):
         """Test that empty dict is returned when file should be skipped."""
-        with patch("tickle.git_utils.is_git_available", return_value=True), \
-             patch("tickle.git_utils.is_in_git_repo", return_value=True), \
-             patch("tickle.git_utils.should_skip_blame", return_value=True):
+        with (
+            patch("tickle.git_utils.is_git_available", return_value=True),
+            patch("tickle.git_utils.is_in_git_repo", return_value=True),
+            patch("tickle.git_utils.should_skip_blame", return_value=True),
+        ):
             result = get_file_blame("/some/file.py")
             assert result == {}
 
     def test_returns_blame_info_on_success(self):
         """Test that blame info is returned on successful git blame."""
-        with patch("tickle.git_utils.is_git_available", return_value=True), \
-             patch("tickle.git_utils.is_in_git_repo", return_value=True), \
-             patch("tickle.git_utils.should_skip_blame", return_value=False), \
-             patch("tickle.git_utils.get_git_root", return_value="/project"), \
-             patch("subprocess.run") as mock_run:
+        with (
+            patch("tickle.git_utils.is_git_available", return_value=True),
+            patch("tickle.git_utils.is_in_git_repo", return_value=True),
+            patch("tickle.git_utils.should_skip_blame", return_value=False),
+            patch("tickle.git_utils.get_git_root", return_value="/project"),
+            patch("subprocess.run") as mock_run,
+        ):
             mock_run.return_value = MagicMock(
                 returncode=0,
                 stdout="""abc123def 1 1 1
@@ -203,7 +214,7 @@ author-mail <john@example.com>
 author-time 1234567890
 summary Initial commit
 \tprint("Hello")
-"""
+""",
             )
             result = get_file_blame("/project/src/file.py")
 
@@ -212,11 +223,13 @@ summary Initial commit
 
     def test_returns_empty_on_git_error(self):
         """Test that empty dict is returned when git command fails."""
-        with patch("tickle.git_utils.is_git_available", return_value=True), \
-             patch("tickle.git_utils.is_in_git_repo", return_value=True), \
-             patch("tickle.git_utils.should_skip_blame", return_value=False), \
-             patch("tickle.git_utils.get_git_root", return_value="/project"), \
-             patch("subprocess.run") as mock_run:
+        with (
+            patch("tickle.git_utils.is_git_available", return_value=True),
+            patch("tickle.git_utils.is_in_git_repo", return_value=True),
+            patch("tickle.git_utils.should_skip_blame", return_value=False),
+            patch("tickle.git_utils.get_git_root", return_value="/project"),
+            patch("subprocess.run") as mock_run,
+        ):
             mock_run.return_value = MagicMock(returncode=1)
             result = get_file_blame("/project/src/file.py")
             assert result == {}
@@ -232,7 +245,7 @@ class TestBlameInfo:
             author_email="john@example.com",
             commit_hash="abc123",
             commit_date="2024-01-01T12:00:00",
-            commit_message="Initial commit"
+            commit_message="Initial commit",
         )
 
         assert info.author == "John Doe"

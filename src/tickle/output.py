@@ -44,7 +44,6 @@ class Formatter(ABC):
         pass
 
 
-
 class JSONFormatter(Formatter):
     """JSON formatter for task output."""
 
@@ -136,7 +135,13 @@ class TreeFormatter(Formatter):
         "CHECKBOX": "green",
     }
 
-    def __init__(self, git_verbose: bool = False, show_details: bool = True, scan_directory: str = ".", no_color: bool = False):
+    def __init__(
+        self,
+        git_verbose: bool = False,
+        show_details: bool = True,
+        scan_directory: str = ".",
+        no_color: bool = False,
+    ):
         """Initialize the tree formatter.
 
         Args:
@@ -159,7 +164,12 @@ class TreeFormatter(Formatter):
         tree = self._build_tree(tasks)
 
         # Render to string using Console
-        console = Console(legacy_windows=False, color_system=None, force_terminal=not self.no_color, no_color=self.no_color)
+        console = Console(
+            legacy_windows=False,
+            color_system=None,
+            force_terminal=not self.no_color,
+            no_color=self.no_color,
+        )
         with console.capture() as capture:
             console.print(tree)
 
@@ -230,7 +240,7 @@ class TreeFormatter(Formatter):
         parent_node: Tree,
         structure: dict,
         tasks_by_file: dict[str, list[Task]],
-        path_prefix: str = ""
+        path_prefix: str = "",
     ) -> None:
         """Recursively add directories and files to tree.
 
@@ -270,7 +280,9 @@ class TreeFormatter(Formatter):
                     for task in task_list:
                         self._add_task_node(file_node, task)
 
-    def _count_tasks_in_dir(self, dir_structure: dict, tasks_by_file: dict[str, list[Task]]) -> int:
+    def _count_tasks_in_dir(
+        self, dir_structure: dict, tasks_by_file: dict[str, list[Task]]
+    ) -> int:
         """Count total tasks in a directory and its subdirectories.
 
         Args:
@@ -383,7 +395,7 @@ def get_formatter(
             git_verbose=git_verbose,
             show_details=not tree_collapse,
             scan_directory=scan_directory,
-            no_color=no_color
+            no_color=no_color,
         )
     else:
         raise ValueError(f"Unknown format type: {format_type}")
@@ -430,8 +442,7 @@ def display_summary_panel(tasks: list[Task]) -> None:
     # Second line: Marker breakdown sorted by priority
     # Get markers sorted by priority
     sorted_markers = sorted(
-        marker_counts.items(),
-        key=lambda x: (MARKER_PRIORITY.get(x[0], 999), x[0])
+        marker_counts.items(), key=lambda x: (MARKER_PRIORITY.get(x[0], 999), x[0])
     )
 
     # Build marker breakdown with colors (only non-zero markers)
@@ -451,12 +462,104 @@ def display_summary_panel(tasks: list[Task]) -> None:
         content.append(part)
 
     # Create and display panel
-    panel = Panel(
-        content,
-        title="Task Summary",
-        box=box.SQUARE,
-        expand=False
-    )
+    panel = Panel(content, title="Task Summary", box=box.SQUARE, expand=False)
 
     console = Console(legacy_windows=False)
     console.print(panel)
+
+
+def export_pdf(tasks, args, merged, filename):
+    """Export tickle output as a color PDF using fpdf2 (A4, portrait)."""
+    import os
+
+    from fpdf import FPDF
+
+    # Only tree format is supported for PDF for now
+    if merged["format"] != "tree":
+        raise ValueError("PDF export currently supports only tree format.")
+
+    # Color mapping for PDF (RGB)
+    pdf_marker_colors = {
+        "TODO": (0, 0, 255),  # Blue
+        "FIXME": (255, 215, 0),  # Gold/Yellow
+        "BUG": (255, 0, 0),  # Red
+        "NOTE": (0, 191, 255),  # DeepSkyBlue/Cyan
+        "HACK": (186, 85, 211),  # MediumOrchid/Magenta
+        "CHECKBOX": (0, 128, 0),  # Green
+    }
+
+    class PDF(FPDF):
+        pass
+
+    pdf = PDF(orientation="P", unit="mm", format="A4")
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
+
+    # Register and use a Unicode font (DejaVu Sans)
+
+    font_dir = Path(__file__).parent
+    font_path_regular = str(font_dir / "DejaVuSans.ttf")
+    font_path_bold = str(font_dir / "DejaVuSans-Bold.ttf")
+    font_path_italic = str(font_dir / "DejaVuSans-Oblique.ttf")
+
+    pdf.add_font("DejaVu", "", font_path_regular, uni=True)
+    if Path(font_path_bold).exists():
+        pdf.add_font("DejaVu", "B", font_path_bold, uni=True)
+    if Path(font_path_italic).exists():
+        pdf.add_font("DejaVu", "I", font_path_italic, uni=True)
+    pdf.set_font("DejaVu", size=12)
+
+    # Title
+    pdf.set_text_color(0, 0, 0)
+    pdf.set_font("DejaVu", "B", 16)
+    pdf.cell(0, 10, f"Tickle Task Report: {merged['path']}", ln=True, align="L")
+    pdf.ln(4)
+    pdf.set_font("DejaVu", size=12)
+
+    # Group tasks by file
+    tasks_by_file = {}
+    for task in tasks:
+        tasks_by_file.setdefault(task.file, []).append(task)
+
+    for file, file_tasks in tasks_by_file.items():
+        pdf.set_font("DejaVu", "B", 13)
+        pdf.set_text_color(0, 0, 0)
+        pdf.cell(0, 8, f"{file}", ln=True)
+        for task in file_tasks:
+            color = pdf_marker_colors.get(task.marker, (0, 0, 0))
+            pdf.set_font("DejaVu", "B", 12)
+            pdf.set_text_color(*color)
+            pdf.cell(0, 7, f"[{task.marker}] ", ln=False)
+            pdf.set_font("DejaVu", size=12)
+            pdf.set_text_color(0, 0, 0)
+            pdf.cell(0, 7, f"Line {task.line}: {task.text}", ln=True)
+            # Add git info if available
+            if task.author:
+                git_info = []
+                git_info.append(f"by {task.author}")
+                if task.commit_date:
+                    import logging
+
+                    try:
+                        commit_dt = datetime.fromisoformat(task.commit_date)
+                        from humanize import naturaltime
+
+                        git_info.append(naturaltime(commit_dt))
+                    except Exception:
+                        logging.exception(
+                            "Exception occurred while formatting commit date in export_pdf"
+                        )
+                if task.commit_hash:
+                    git_info.append(f"{task.commit_hash[:7]}")
+                if task.commit_message:
+                    git_info.append(f'"{task.commit_message}"')
+                pdf.set_font("DejaVu", "I", 10)
+                pdf.set_text_color(100, 100, 100)
+                pdf.cell(0, 6, f"({' | '.join(git_info)})", ln=True)
+        pdf.ln(2)
+
+    pdf.output(filename)
+    if os.path.exists(filename):
+        return True
+    else:
+        raise RuntimeError(f"Failed to export PDF to {filename}")

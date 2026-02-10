@@ -59,7 +59,9 @@ class TestCLI:
 
     def test_main_markers_filter(self, sample_repo, capsys):
         """Test --markers flag to filter specific markers."""
-        with mock.patch("sys.argv", ["tickle", str(sample_repo), "--markers", "TODO,FIXME"]):
+        with mock.patch(
+            "sys.argv", ["tickle", str(sample_repo), "--markers", "TODO,FIXME"]
+        ):
             main()
             captured = capsys.readouterr()
 
@@ -86,7 +88,9 @@ class TestCLI:
 
     def test_main_format_markdown(self, sample_repo, capsys):
         """Test --format markdown output."""
-        with mock.patch("sys.argv", ["tickle", str(sample_repo), "--format", "markdown"]):
+        with mock.patch(
+            "sys.argv", ["tickle", str(sample_repo), "--format", "markdown"]
+        ):
             main()
             captured = capsys.readouterr()
 
@@ -117,7 +121,7 @@ class TestCLI:
         """Test combining multiple flags."""
         with mock.patch(
             "sys.argv",
-            ["tickle", str(sample_repo), "--markers", "TODO", "--format", "json"]
+            ["tickle", str(sample_repo), "--markers", "TODO", "--format", "json"],
         ):
             main()
             captured = capsys.readouterr()
@@ -128,6 +132,7 @@ class TestCLI:
     def test_version_flag(self, capsys):
         """Test --version flag displays version."""
         from tickle import __version__
+
         with mock.patch("sys.argv", ["tickle", "--version"]):
             with pytest.raises(SystemExit) as exc_info:
                 main()
@@ -195,6 +200,64 @@ class TestCLI:
                 # Should be sorted by file (a.py before z.py)
                 assert a_py_line < z_py_line
 
+    def test_export_plain_text(self, sample_repo, tmp_path, capsys):
+        """Test --export flag creates a plain text file with correct content and no color codes."""
+        export_file = tmp_path / "output.txt"
+        with mock.patch(
+            "sys.argv", ["tickle", str(sample_repo), "--export", str(export_file)]
+        ):
+            main()
+            captured = capsys.readouterr()
+            assert export_file.exists()
+            content = export_file.read_text(encoding="utf-8")
+            # Should contain task markers and no ANSI color codes
+            assert "TODO" in content and "\x1b[" not in content
+            assert "[tickle] Output exported to:" in captured.out
+
+    def test_export_overwrite_plain_text(self, sample_repo, tmp_path, capsys):
+        """Test --export overwrites existing file and warns."""
+        export_file = tmp_path / "output.txt"
+        export_file.write_text("old content", encoding="utf-8")
+        with mock.patch(
+            "sys.argv", ["tickle", str(sample_repo), "--export", str(export_file)]
+        ):
+            main()
+            captured = capsys.readouterr()
+            content = export_file.read_text(encoding="utf-8")
+            assert "TODO" in content and "old content" not in content
+            assert "Warning: Overwrote" in captured.out
+
+    def test_export_pdf(self, sample_repo, tmp_path, capsys):
+        """Test --export-pdf flag creates a PDF file with correct header."""
+        export_file = tmp_path / "output.pdf"
+        with mock.patch(
+            "sys.argv", ["tickle", str(sample_repo), "--export-pdf", str(export_file)]
+        ):
+            main()
+            captured = capsys.readouterr()
+            assert export_file.exists()
+            # Check PDF header
+            with open(export_file, "rb") as f:
+                assert f.read(4) == b"%PDF"
+            assert "Output exported to PDF" in captured.out
+
+    def test_export_pdf_only_tree_format(self, sample_repo, tmp_path):
+        """Test --export-pdf raises error if not using tree format."""
+        export_file = tmp_path / "output.pdf"
+        with pytest.raises(ValueError):
+            with mock.patch(
+                "sys.argv",
+                [
+                    "tickle",
+                    str(sample_repo),
+                    "--format",
+                    "json",
+                    "--export-pdf",
+                    str(export_file),
+                ],
+            ):
+                main()
+
 
 class TestSummaryPanel:
     """Test cases for the summary panel feature."""
@@ -225,7 +288,9 @@ class TestSummaryPanel:
 
     def test_panel_not_in_markdown_mode(self, sample_repo, capsys):
         """Test that summary panel does not appear in Markdown format."""
-        with mock.patch("sys.argv", ["tickle", str(sample_repo), "--format", "markdown"]):
+        with mock.patch(
+            "sys.argv", ["tickle", str(sample_repo), "--format", "markdown"]
+        ):
             main()
             captured = capsys.readouterr()
 
@@ -293,13 +358,15 @@ class TestConfigCommands:
         with tempfile.TemporaryDirectory() as tmpdir:
             config_file = Path(tmpdir) / "tickle.toml"
             config_file.write_text(
-                '[tickle]\n'
+                "[tickle]\n"
                 'markers = ["TODO", "FIXME"]\n'
                 'ignore = ["node_modules", "dist"]\n'
                 'format = "json"\n'
             )
 
-            with mock.patch("sys.argv", ["tickle", "config", "show", "--config", str(config_file)]):
+            with mock.patch(
+                "sys.argv", ["tickle", "config", "show", "--config", str(config_file)]
+            ):
                 main()
                 captured = capsys.readouterr()
 
@@ -316,7 +383,9 @@ class TestConfigCommands:
                 captured = capsys.readouterr()
 
                 # Should show defaults
-                assert "markers" in captured.out.lower() or "todo" in captured.out.lower()
+                assert (
+                    "markers" in captured.out.lower() or "todo" in captured.out.lower()
+                )
 
     def test_config_command_without_subcommand_shows_help(self, capsys):
         """Test 'tickle config' without subcommand shows help."""
@@ -333,6 +402,7 @@ class TestConfigCommands:
             original_cwd = Path.cwd()
             try:
                 import os
+
                 os.chdir(tmpdir)
 
                 with mock.patch("sys.argv", ["tickle", "init"]):
@@ -350,6 +420,7 @@ class TestConfigCommands:
             original_cwd = Path.cwd()
             try:
                 import os
+
                 os.chdir(tmpdir)
 
                 # Create existing config file
@@ -371,9 +442,13 @@ class TestConfigCommands:
             original_cwd = Path.cwd()
             try:
                 import os
+
                 os.chdir(tmpdir)
 
-                with mock.patch("pathlib.Path.write_text", side_effect=PermissionError("Access denied")):
+                with mock.patch(
+                    "pathlib.Path.write_text",
+                    side_effect=PermissionError("Access denied"),
+                ):
                     with mock.patch("sys.argv", ["tickle", "init"]):
                         with pytest.raises(SystemExit) as exc:
                             main()
@@ -406,7 +481,9 @@ class TestConfigCommands:
         """Test --no-config flag ignores config files."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir_path = Path(tmpdir)
-            (tmpdir_path / "test.py").write_text("# TODO: Test task\n# FIXME: Another\n")
+            (tmpdir_path / "test.py").write_text(
+                "# TODO: Test task\n# FIXME: Another\n"
+            )
 
             # Create a config that would filter out TODO
             config_file = tmpdir_path / "tickle.toml"
@@ -440,4 +517,3 @@ class TestPlatformSpecific:
                     with mock.patch("sys.argv", ["tickle", tmpdir]):
                         main()
                         mock_reconfig.assert_not_called()
-

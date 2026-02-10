@@ -17,8 +17,8 @@ from tickle.output import (
 
 def strip_ansi(text):
     """Remove ANSI color codes from text."""
-    ansi_escape = re.compile(r'\x1b\[[0-9;]*m')
-    return ansi_escape.sub('', text)
+    ansi_escape = re.compile(r"\x1b\[[0-9;]*m")
+    return ansi_escape.sub("", text)
 
 
 class TestTaskFormatting:
@@ -28,7 +28,12 @@ class TestTaskFormatting:
     def sample_tasks(self):
         """Create sample Task objects for testing."""
         return [
-            Task(file="src/main.py", line=5, marker="TODO", text="# TODO: Implement feature"),
+            Task(
+                file="src/main.py",
+                line=5,
+                marker="TODO",
+                text="# TODO: Implement feature",
+            ),
             Task(file="src/main.py", line=12, marker="FIXME", text="# FIXME: Fix bug"),
             Task(file="tests/test.py", line=3, marker="BUG", text="# BUG: Known issue"),
         ]
@@ -96,7 +101,12 @@ class TestFormatters:
     def sample_tasks(self):
         """Create sample Task objects for testing."""
         return [
-            Task(file="src/main.py", line=5, marker="TODO", text="# TODO: Implement feature"),
+            Task(
+                file="src/main.py",
+                line=5,
+                marker="TODO",
+                text="# TODO: Implement feature",
+            ),
             Task(file="src/main.py", line=12, marker="FIXME", text="# FIXME: Fix bug"),
             Task(file="tests/test.py", line=3, marker="BUG", text="# BUG: Known issue"),
         ]
@@ -109,7 +119,9 @@ class TestFormatters:
     @pytest.fixture
     def single_task(self):
         """Single task for minimal testing."""
-        return [Task(file="app.py", line=1, marker="NOTE", text="# NOTE: Remember this")]
+        return [
+            Task(file="app.py", line=1, marker="NOTE", text="# NOTE: Remember this")
+        ]
 
     @pytest.fixture
     def multi_file_tasks(self):
@@ -149,7 +161,7 @@ class TestFormatters:
         result = formatter.format(sample_tasks[:2])  # Use 2 tasks for clearer test
 
         # Check for 2-space indentation in output
-        assert "\n  {" in result or "\n  \"file\"" in result
+        assert "\n  {" in result or '\n  "file"' in result
 
     def test_json_formatter_valid_structure(self, single_task):
         """Test JSONFormatter produces valid structure."""
@@ -248,7 +260,12 @@ class TestDisplaySummaryPanel:
     def sample_tasks(self):
         """Create sample Task objects for testing."""
         return [
-            Task(file="src/main.py", line=5, marker="TODO", text="# TODO: Implement feature"),
+            Task(
+                file="src/main.py",
+                line=5,
+                marker="TODO",
+                text="# TODO: Implement feature",
+            ),
             Task(file="src/main.py", line=12, marker="FIXME", text="# FIXME: Fix bug"),
             Task(file="tests/test.py", line=3, marker="BUG", text="# BUG: Known issue"),
             Task(file="src/utils.py", line=8, marker="TODO", text="# TODO: Add tests"),
@@ -257,7 +274,9 @@ class TestDisplaySummaryPanel:
     @pytest.fixture
     def single_task(self):
         """Single task for minimal testing."""
-        return [Task(file="app.py", line=1, marker="NOTE", text="# NOTE: Remember this")]
+        return [
+            Task(file="app.py", line=1, marker="NOTE", text="# NOTE: Remember this")
+        ]
 
     @pytest.fixture
     def empty_tasks(self):
@@ -366,18 +385,13 @@ class TestGitBlameFormatting:
             author_email="john@example.com",
             commit_hash="abc123def456789",
             commit_date="2024-01-15T10:30:00",
-            commit_message="Add feature"
+            commit_message="Add feature",
         )
 
     @pytest.fixture
     def task_without_blame(self):
         """Create a task without git blame information."""
-        return Task(
-            file="src/main.py",
-            line=10,
-            marker="TODO",
-            text="# TODO: Fix this"
-        )
+        return Task(file="src/main.py", line=10, marker="TODO", text="# TODO: Fix this")
 
     def test_markdown_formatter_shows_git_info(self, task_with_blame):
         """Test that MarkdownFormatter shows git blame info when available."""
@@ -448,8 +462,12 @@ class TestTreeFormatter:
         return [
             Task(file="src/main.py", line=10, marker="TODO", text="# TODO: Task 1"),
             Task(file="src/main.py", line=20, marker="FIXME", text="# FIXME: Task 2"),
-            Task(file="src/utils/helper.py", line=5, marker="BUG", text="# BUG: Task 3"),
-            Task(file="tests/test_core.py", line=15, marker="NOTE", text="# NOTE: Task 4"),
+            Task(
+                file="src/utils/helper.py", line=5, marker="BUG", text="# BUG: Task 3"
+            ),
+            Task(
+                file="tests/test_core.py", line=15, marker="NOTE", text="# NOTE: Task 4"
+            ),
         ]
 
     @pytest.fixture
@@ -471,7 +489,7 @@ class TestTreeFormatter:
             author="Alice",
             commit_date="2024-01-15T10:00:00",
             commit_hash="abc123def456",
-            commit_message="Add feature"
+            commit_message="Add feature",
         )
 
     def test_tree_formatter_with_nested_directories(self, nested_tasks):

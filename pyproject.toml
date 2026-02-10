@@ -28,7 +28,8 @@ dependencies = [
     "tomli>=2.0.0; python_version < '3.11'",
     "colorama>=0.4.6",
     "rich>=13.0.0",
-    "humanize>=4.0.0"
+    "humanize>=4.0.0",
+    "fpdf2>=2.7.0"
 ]
 
 [project.urls]
