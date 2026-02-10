@@ -28,29 +28,43 @@ def get_sort_key(sort_by: str) -> Callable[["Task"], tuple]:
         A function that takes a Task and returns a sort key tuple
     """
     if sort_by == "marker":
+
         def marker_sort_key(task: "Task") -> tuple:
             # Sort by marker priority (with unknown markers at the end), then file, then line
             # Including marker ensures alphabetical ordering within the same priority level
             priority = MARKER_PRIORITY.get(task.marker, 999)
             return (priority, task.marker, task.file, task.line)
+
         return marker_sort_key
     elif sort_by == "age":
+
         def age_sort_key(task: "Task") -> tuple:
             # Sort by commit date (oldest first), None values last
             # Use high value sentinel for None to push to end
-            date_key = task.commit_date if task.commit_date is not None else "9999-99-99T99:99:99"
+            date_key = (
+                task.commit_date
+                if task.commit_date is not None
+                else "9999-99-99T99:99:99"
+            )
             return (date_key, task.file, task.line)
+
         return age_sort_key
     elif sort_by == "author":
+
         def author_sort_key(task: "Task") -> tuple:
             # Sort by author name alphabetically (case-insensitive), None values last
             # Use high value sentinel for None to push to end
-            author_key = task.author.lower() if task.author is not None else "zzzzzzzzzzzzz"
+            author_key = (
+                task.author.lower() if task.author is not None else "zzzzzzzzzzzzz"
+            )
             return (author_key, task.file, task.line)
+
         return author_sort_key
     else:  # default to "file"
+
         def file_sort_key(task: "Task") -> tuple:
             return (task.file, task.line)
+
         return file_sort_key
 
 
@@ -69,6 +83,7 @@ class Task:
         commit_date: Date when this line was last modified (from git blame)
         commit_message: Commit message for the commit that last modified this line (from git blame)
     """
+
     file: str
     line: int
     marker: str
@@ -95,7 +110,7 @@ class Task:
             "file": self.file,
             "line": self.line,
             "marker": self.marker,
-            "text": self.text
+            "text": self.text,
         }
         # Include git blame fields if present
         if self.author is not None:

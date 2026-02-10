@@ -18,6 +18,7 @@ class BlameInfo:
         commit_date: ISO format date string of the commit
         commit_message: First line of the commit message
     """
+
     author: str
     author_email: str
     commit_hash: str
@@ -55,9 +56,9 @@ def get_git_root(filepath: str) -> str | None:
             cwd=file_dir,
             capture_output=True,
             text=True,
-            encoding='utf-8',
-            errors='replace',
-            timeout=5
+            encoding="utf-8",
+            errors="replace",
+            timeout=5,
         )
 
         if result.returncode == 0:
@@ -90,7 +91,7 @@ def should_skip_blame(filepath: str, line_count_threshold: int = 1000) -> bool:
         True if blame should be skipped, False otherwise
     """
     try:
-        with open(filepath, encoding='utf-8') as f:
+        with open(filepath, encoding="utf-8") as f:
             line_count = sum(1 for _ in f)
         return line_count > line_count_threshold
     except (OSError, UnicodeDecodeError):
@@ -109,14 +110,14 @@ def parse_git_blame_porcelain(output: str) -> dict[int, BlameInfo]:
     """
     blame_info: dict[int, BlameInfo] = {}
     commit_cache: dict[str, BlameInfo] = {}  # Cache commit info for reuse
-    lines = output.split('\n')
+    lines = output.split("\n")
 
     i = 0
     while i < len(lines):
         line = lines[i]
 
         # Each blame section starts with a commit hash and line numbers
-        if not line or line.startswith('\t'):
+        if not line or line.startswith("\t"):
             i += 1
             continue
 
@@ -130,12 +131,12 @@ def parse_git_blame_porcelain(output: str) -> dict[int, BlameInfo]:
         final_line = int(parts[2])
 
         # Skip uncommitted lines
-        if commit_hash == '0000000000000000000000000000000000000000':
+        if commit_hash == "0000000000000000000000000000000000000000":
             i += 1
             # Skip any metadata and content line
-            while i < len(lines) and not lines[i].startswith('\t'):
+            while i < len(lines) and not lines[i].startswith("\t"):
                 i += 1
-            if i < len(lines) and lines[i].startswith('\t'):
+            if i < len(lines) and lines[i].startswith("\t"):
                 i += 1
             continue
 
@@ -145,9 +146,9 @@ def parse_git_blame_porcelain(output: str) -> dict[int, BlameInfo]:
             blame_info[final_line] = commit_cache[commit_hash]
             i += 1
             # Skip any metadata lines (may or may not be present)
-            while i < len(lines) and not lines[i].startswith('\t'):
+            while i < len(lines) and not lines[i].startswith("\t"):
                 i += 1
-            if i < len(lines) and lines[i].startswith('\t'):
+            if i < len(lines) and lines[i].startswith("\t"):
                 i += 1
             continue
 
@@ -158,17 +159,17 @@ def parse_git_blame_porcelain(output: str) -> dict[int, BlameInfo]:
         summary = ""
 
         i += 1
-        while i < len(lines) and not lines[i].startswith('\t'):
-            if lines[i].startswith('author '):
+        while i < len(lines) and not lines[i].startswith("\t"):
+            if lines[i].startswith("author "):
                 author = lines[i][7:]
-            elif lines[i].startswith('author-mail '):
+            elif lines[i].startswith("author-mail "):
                 # Remove < and > from email
-                author_email = lines[i][12:].strip('<>')
-            elif lines[i].startswith('author-time '):
+                author_email = lines[i][12:].strip("<>")
+            elif lines[i].startswith("author-time "):
                 # Convert Unix timestamp to ISO format
                 timestamp = int(lines[i][12:])
                 author_time = datetime.fromtimestamp(timestamp).isoformat()
-            elif lines[i].startswith('summary '):
+            elif lines[i].startswith("summary "):
                 summary = lines[i][8:]
             i += 1
 
@@ -179,13 +180,13 @@ def parse_git_blame_porcelain(output: str) -> dict[int, BlameInfo]:
                 author_email=author_email,
                 commit_hash=commit_hash,
                 commit_date=author_time,
-                commit_message=summary
+                commit_message=summary,
             )
             blame_info[final_line] = info
             commit_cache[commit_hash] = info
 
         # Skip the actual line content (starts with tab)
-        if i < len(lines) and lines[i].startswith('\t'):
+        if i < len(lines) and lines[i].startswith("\t"):
             i += 1
 
     return blame_info
@@ -226,9 +227,9 @@ def get_file_blame(filepath: str) -> dict[int, BlameInfo]:
             cwd=git_root,
             capture_output=True,
             text=True,
-            encoding='utf-8',
-            errors='replace',
-            timeout=10
+            encoding="utf-8",
+            errors="replace",
+            timeout=10,
         )
 
         if result.returncode == 0 and result.stdout:

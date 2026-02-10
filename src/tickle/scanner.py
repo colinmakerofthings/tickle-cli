@@ -15,7 +15,9 @@ from tickle.models import Task, get_sort_key
 BINARY_EXTENSIONS = {".png", ".jpg", ".jpeg", ".exe", ".bin", ".so", ".dll", ".pyc"}
 
 
-def _should_ignore_path(filepath: Path, ignore_patterns: list[str], ignore_hidden: bool = True) -> bool:
+def _should_ignore_path(
+    filepath: Path, ignore_patterns: list[str], ignore_hidden: bool = True
+) -> bool:
     """Check if a file path matches any ignore patterns.
 
     Args:
@@ -29,7 +31,7 @@ def _should_ignore_path(filepath: Path, ignore_patterns: list[str], ignore_hidde
     # Ignore hidden directories (starting with .) unless explicitly included
     if ignore_hidden:
         for part in filepath.parts:
-            if part.startswith('.') and part != '.':
+            if part.startswith(".") and part != ".":
                 return True
 
     if not ignore_patterns:
@@ -50,7 +52,7 @@ def scan_directory(
     sort_by: str = "file",
     reverse_sort: bool = False,
     ignore_hidden: bool = True,
-    enable_git_blame: bool = True
+    enable_git_blame: bool = True,
 ) -> list[Task]:
     """Recursively scan a directory for task markers.
 
@@ -157,4 +159,3 @@ def _enrich_tasks_with_git_blame(tasks: list[Task]) -> list[Task]:
                 task.commit_message = blame.commit_message
 
     return tasks
-

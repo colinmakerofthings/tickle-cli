@@ -22,7 +22,9 @@ def handle_init_command(args):
     config_path = Path("tickle.toml")
 
     if config_path.exists():
-        print("Error: tickle.toml already exists. Remove it first if you want to recreate it.")
+        print(
+            "Error: tickle.toml already exists. Remove it first if you want to recreate it."
+        )
         sys.exit(1)
 
     try:
@@ -56,7 +58,9 @@ def handle_scan_command(args):
     # Load configuration unless --no-config is specified
     config_path = None
     if not args.no_config:
-        config_path = find_config_file(start_path=args.path, config_override=args.config)
+        config_path = find_config_file(
+            start_path=args.path, config_override=args.config
+        )
         if args.verbose and config_path:
             print(f"Using config from: {config_path}", file=sys.stderr)
 
@@ -89,13 +93,20 @@ def handle_scan_command(args):
         no_color=bool(getattr(args, "export", None)),
     )
     output = formatter.format(tasks)
-    if hasattr(args, 'export') and args.export:
+    if hasattr(args, "export") and args.export:
         export_path = Path(args.export)
         overwrite = export_path.exists()
         export_path.write_text(output, encoding="utf-8")
         if overwrite:
             print(f"[tickle] Warning: Overwrote existing file: {export_path}")
         print(f"[tickle] Output exported to: {export_path}")
+    # PDF export
+    if hasattr(args, "export_pdf") and args.export_pdf:
+        from tickle.output import export_pdf
+
+        export_pdf(tasks, args=args, merged=merged, filename=args.export_pdf)
+        print(f"[tickle] Output exported to PDF: {args.export_pdf}")
+        return
     else:
         print(output)
 
@@ -117,7 +128,9 @@ def main():
             description="Scan repositories for outstanding developer tasks (TODO, FIXME, BUG, NOTE, HACK, CHECKBOX)",
             prog="tickle",
         )
-        parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+        parser.add_argument(
+            "--version", action="version", version=f"%(prog)s {__version__}"
+        )
 
         subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
@@ -127,12 +140,17 @@ def main():
         # Subcommand: config show
         config_parser = subparsers.add_parser("config", help="Configuration management")
         config_subparsers = config_parser.add_subparsers(dest="config_command")
-        config_show_parser = config_subparsers.add_parser("show", help="Show effective configuration")
+        config_show_parser = config_subparsers.add_parser(
+            "show", help="Show effective configuration"
+        )
         config_show_parser.add_argument(
             "--config", type=str, help="Path to config file to use"
         )
         config_show_parser.add_argument(
-            "path", nargs="?", default=".", help="Path to scan (for finding project config)"
+            "path",
+            nargs="?",
+            default=".",
+            help="Path to scan (for finding project config)",
         )
 
         args = parser.parse_args()
@@ -153,7 +171,9 @@ def main():
         prog="tickle",
     )
 
-    parser.add_argument("path", nargs="?", default=".", help="Path to scan (default: current directory)")
+    parser.add_argument(
+        "path", nargs="?", default=".", help="Path to scan (default: current directory)"
+    )
     parser.add_argument(
         "--markers",
         type=str,
@@ -206,7 +226,9 @@ def main():
         help="Show only directory structure with counts (hide task details)",
     )
     parser.add_argument(
-        "--config", type=str, help="Path to config file to use (overrides default search)"
+        "--config",
+        type=str,
+        help="Path to config file to use (overrides default search)",
     )
     parser.add_argument(
         "--no-config", action="store_true", help="Ignore all configuration files"
@@ -217,9 +239,16 @@ def main():
     parser.add_argument(
         "--export",
         type=str,
-        help="Export output to a plain text file (overwrites if exists)"
+        help="Export output to a plain text file (overwrites if exists)",
     )
-    parser.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
+    parser.add_argument(
+        "--export-pdf",
+        type=str,
+        help="Export output to a color PDF file (A4, portrait, overwrites if exists)",
+    )
+    parser.add_argument(
+        "--version", action="version", version=f"%(prog)s {__version__}"
+    )
 
     args = parser.parse_args()
     handle_scan_command(args)
@@ -227,4 +256,3 @@ def main():
 
 # Entry point for pyproject.toml scripts
 app = main
-

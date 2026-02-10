@@ -38,10 +38,7 @@ def sample_repo():
         subdir = tmpdir_path / "subdir"
         subdir.mkdir()
         sub_file = subdir / "nested.py"
-        sub_file.write_text(
-            "# HACK: Temporary workaround\n"
-            "# TODO: Refactor this\n"
-        )
+        sub_file.write_text("# HACK: Temporary workaround\n" "# TODO: Refactor this\n")
 
         # Create a binary file (should be skipped)
         binary_file = tmpdir_path / "image.png"
@@ -66,7 +63,9 @@ class TestScanDirectory:
         """Test that scan_directory finds all marker types."""
         tasks = scan_directory(str(sample_repo))
 
-        assert len(tasks) == 8  # TODO, FIXME, BUG, NOTE, HACK, TODO (in subdir), 2 CHECKBOXes
+        assert (
+            len(tasks) == 8
+        )  # TODO, FIXME, BUG, NOTE, HACK, TODO (in subdir), 2 CHECKBOXes
         assert all(isinstance(task, Task) for task in tasks)
 
     def test_scan_directory_default_markers(self, sample_repo):
@@ -101,10 +100,7 @@ class TestScanDirectory:
 
     def test_scan_directory_ignore_multiple_patterns(self, sample_repo):
         """Test multiple ignore patterns."""
-        tasks = scan_directory(
-            str(sample_repo),
-            ignore_patterns=["subdir", "utils.py"]
-        )
+        tasks = scan_directory(str(sample_repo), ignore_patterns=["subdir", "utils.py"])
 
         files = {task.file for task in tasks}
         assert not any("subdir" in f for f in files)
@@ -233,10 +229,7 @@ class TestScanDirectoryWithDetector:
         """Test scan_directory works with custom detector instance."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir_path = Path(tmpdir)
-            (tmpdir_path / "test.py").write_text(
-                "# TODO: First\n"
-                "# FIXME: Second\n"
-            )
+            (tmpdir_path / "test.py").write_text("# TODO: First\n" "# FIXME: Second\n")
 
             detector = CommentMarkerDetector(markers=["TODO"])
             tasks = scan_directory(str(tmpdir_path), detector=detector)
@@ -249,9 +242,7 @@ class TestScanDirectoryWithDetector:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir_path = Path(tmpdir)
             (tmpdir_path / "test.py").write_text(
-                "# TODO: Item 1\n"
-                "# BUG: Item 2\n"
-                "# FIXME: Item 3\n"
+                "# TODO: Item 1\n" "# BUG: Item 2\n" "# FIXME: Item 3\n"
             )
 
             detector = CommentMarkerDetector(markers=["BUG", "FIXME"])
@@ -265,17 +256,12 @@ class TestScanDirectoryWithDetector:
         """Test that detector parameter takes precedence over markers parameter."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir_path = Path(tmpdir)
-            (tmpdir_path / "test.py").write_text(
-                "# TODO: Item 1\n"
-                "# FIXME: Item 2\n"
-            )
+            (tmpdir_path / "test.py").write_text("# TODO: Item 1\n" "# FIXME: Item 2\n")
 
             # Pass both detector and markers - detector should win
             detector = CommentMarkerDetector(markers=["TODO"])
             tasks = scan_directory(
-                str(tmpdir_path),
-                markers=["FIXME"],
-                detector=detector
+                str(tmpdir_path), markers=["FIXME"], detector=detector
             )
 
             # Should use detector's TODO, not the markers parameter's FIXME
@@ -298,10 +284,7 @@ class TestScanDirectoryWithDetector:
         """Test that markers parameter is used when detector not provided."""
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir_path = Path(tmpdir)
-            (tmpdir_path / "test.py").write_text(
-                "# TODO: Item 1\n"
-                "# FIXME: Item 2\n"
-            )
+            (tmpdir_path / "test.py").write_text("# TODO: Item 1\n" "# FIXME: Item 2\n")
 
             # No detector provided, should use markers parameter
             tasks = scan_directory(str(tmpdir_path), markers=["FIXME"])
@@ -367,14 +350,23 @@ class TestScanDirectorySorting:
         with tempfile.TemporaryDirectory() as tmpdir:
             tmpdir_path = Path(tmpdir)
             (tmpdir_path / "test.py").write_text(
-                "# UNKNOWN: Should be last\n"
-                "# TODO: Should be before unknown\n"
+                "# UNKNOWN: Should be last\n" "# TODO: Should be before unknown\n"
             )
 
             # Need to manually create tasks since detector won't find UNKNOWN
             tasks = [
-                Task(file="test.py", line=1, marker="UNKNOWN", text="# UNKNOWN: Should be last"),
-                Task(file="test.py", line=2, marker="TODO", text="# TODO: Should be before unknown"),
+                Task(
+                    file="test.py",
+                    line=1,
+                    marker="UNKNOWN",
+                    text="# UNKNOWN: Should be last",
+                ),
+                Task(
+                    file="test.py",
+                    line=2,
+                    marker="TODO",
+                    text="# TODO: Should be before unknown",
+                ),
             ]
 
             sort_key = get_sort_key("marker")
@@ -402,12 +394,27 @@ class TestScanDirectorySorting:
     def test_scan_directory_sorts_by_age_oldest_first(self):
         """Test sorting by age with oldest tasks first."""
         tasks = [
-            Task(file="a.py", line=1, marker="TODO", text="Old task",
-                 commit_date="2023-01-15T10:00:00"),
-            Task(file="b.py", line=1, marker="TODO", text="New task",
-                 commit_date="2024-12-20T15:30:00"),
-            Task(file="c.py", line=1, marker="TODO", text="Middle task",
-                 commit_date="2024-06-10T08:45:00"),
+            Task(
+                file="a.py",
+                line=1,
+                marker="TODO",
+                text="Old task",
+                commit_date="2023-01-15T10:00:00",
+            ),
+            Task(
+                file="b.py",
+                line=1,
+                marker="TODO",
+                text="New task",
+                commit_date="2024-12-20T15:30:00",
+            ),
+            Task(
+                file="c.py",
+                line=1,
+                marker="TODO",
+                text="Middle task",
+                commit_date="2024-06-10T08:45:00",
+            ),
         ]
 
         sort_key = get_sort_key("age")
@@ -421,9 +428,16 @@ class TestScanDirectorySorting:
         """Test that tasks without commit_date are sorted last."""
         tasks = [
             Task(file="a.py", line=1, marker="TODO", text="No date", commit_date=None),
-            Task(file="b.py", line=1, marker="TODO", text="Old task",
-                 commit_date="2023-01-15T10:00:00"),
-            Task(file="c.py", line=1, marker="TODO", text="No date 2", commit_date=None),
+            Task(
+                file="b.py",
+                line=1,
+                marker="TODO",
+                text="Old task",
+                commit_date="2023-01-15T10:00:00",
+            ),
+            Task(
+                file="c.py", line=1, marker="TODO", text="No date 2", commit_date=None
+            ),
         ]
 
         sort_key = get_sort_key("age")
@@ -438,12 +452,27 @@ class TestScanDirectorySorting:
     def test_age_sort_secondary_sort_by_file_line(self):
         """Test that age sorting includes secondary sort by file and line."""
         tasks = [
-            Task(file="z.py", line=10, marker="TODO", text="Task 1",
-                 commit_date="2024-01-15T10:00:00"),
-            Task(file="a.py", line=5, marker="TODO", text="Task 2",
-                 commit_date="2024-01-15T10:00:00"),
-            Task(file="a.py", line=1, marker="TODO", text="Task 3",
-                 commit_date="2024-01-15T10:00:00"),
+            Task(
+                file="z.py",
+                line=10,
+                marker="TODO",
+                text="Task 1",
+                commit_date="2024-01-15T10:00:00",
+            ),
+            Task(
+                file="a.py",
+                line=5,
+                marker="TODO",
+                text="Task 2",
+                commit_date="2024-01-15T10:00:00",
+            ),
+            Task(
+                file="a.py",
+                line=1,
+                marker="TODO",
+                text="Task 3",
+                commit_date="2024-01-15T10:00:00",
+            ),
         ]
 
         sort_key = get_sort_key("age")
@@ -527,10 +556,20 @@ class TestScanDirectorySorting:
     def test_scan_directory_reverse_sort_by_age(self):
         """Test that reverse flag reverses age sort (newest first)."""
         tasks = [
-            Task(file="a.py", line=1, marker="TODO", text="Old",
-                 commit_date="2023-01-15T10:00:00"),
-            Task(file="b.py", line=1, marker="TODO", text="New",
-                 commit_date="2024-12-20T15:30:00"),
+            Task(
+                file="a.py",
+                line=1,
+                marker="TODO",
+                text="Old",
+                commit_date="2023-01-15T10:00:00",
+            ),
+            Task(
+                file="b.py",
+                line=1,
+                marker="TODO",
+                text="New",
+                commit_date="2024-12-20T15:30:00",
+            ),
         ]
 
         sort_key = get_sort_key("age")
@@ -568,7 +607,7 @@ class TestScanDirectoryErrorHandling:
 
             # Create a binary file that will fail UTF-8 decoding
             binary_file = tmpdir_path / "binary.dat"
-            binary_file.write_bytes(b'\x80\x81\x82\x83\x84')  # Invalid UTF-8
+            binary_file.write_bytes(b"\x80\x81\x82\x83\x84")  # Invalid UTF-8
 
             # Should scan successfully, skipping the binary file
             tasks = scan_directory(str(tmpdir_path))
@@ -623,5 +662,3 @@ class TestGitBlameEnrichment:
 
             assert len(tasks) == 1
             # Should have attempted enrichment (even if no git repo)
-
-

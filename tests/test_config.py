@@ -23,9 +23,13 @@ class TestGetUserConfigPath:
     def test_windows_path(self):
         """Test user config path on Windows."""
         with mock.patch("sys.platform", "win32"):
-            with mock.patch.dict(os.environ, {"APPDATA": "C:\\Users\\Test\\AppData\\Roaming"}):
+            with mock.patch.dict(
+                os.environ, {"APPDATA": "C:\\Users\\Test\\AppData\\Roaming"}
+            ):
                 path = get_user_config_path()
-                assert path == Path("C:\\Users\\Test\\AppData\\Roaming\\tickle\\tickle.toml")
+                assert path == Path(
+                    "C:\\Users\\Test\\AppData\\Roaming\\tickle\\tickle.toml"
+                )
 
     def test_unix_path(self):
         """Test user config path on Unix systems."""
@@ -90,7 +94,9 @@ class TestFindConfigFile:
             custom_config = Path(tmpdir) / "custom.toml"
             custom_config.write_text("[tickle]\nmarkers = ['TODO']")
 
-            found = find_config_file(start_path=tmpdir, config_override=str(custom_config))
+            found = find_config_file(
+                start_path=tmpdir, config_override=str(custom_config)
+            )
             assert found == custom_config
 
     def test_config_override_not_found_warns(self):
@@ -132,13 +138,15 @@ class TestLoadConfig:
         """Test loading basic configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 markers = ["TODO", "FIXME"]
 ignore = ["node_modules", "*.min.js"]
 format = "json"
 sort = "marker"
-""")
+"""
+            )
 
             config = load_config(config_path)
             assert config.markers == ["TODO", "FIXME"]
@@ -150,14 +158,16 @@ sort = "marker"
         """Test loading boolean configuration options."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 reverse = true
 include_hidden = true
 git_blame = false
 git_verbose = true
 tree_collapse = true
-""")
+"""
+            )
 
             config = load_config(config_path)
             assert config.reverse is True
@@ -170,11 +180,13 @@ tree_collapse = true
         """Test loading from pyproject.toml [tool.tickle] section."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "pyproject.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tool.tickle]
 markers = ["BUG"]
 ignore = ["dist"]
-""")
+"""
+            )
 
             config = load_config(config_path)
             assert config.markers == ["BUG"]
@@ -223,12 +235,14 @@ ignore = ["dist"]
         """Test warning for unknown configuration keys."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 markers = ["TODO"]
 unknown_key = "value"
 another_unknown = 123
-""")
+"""
+            )
 
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
@@ -484,12 +498,14 @@ class TestConfigIntegration:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create project config
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 markers = ["BUG", "FIXME"]
 ignore = ["node_modules", "dist"]
 format = "json"
-""")
+"""
+            )
 
             # Find config
             found = find_config_file(start_path=tmpdir)
@@ -525,11 +541,13 @@ format = "json"
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create project config
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 markers = ["TODO"]
 format = "json"
-""")
+"""
+            )
 
             found = find_config_file(start_path=tmpdir)
             config = load_config(found)
@@ -574,12 +592,14 @@ class TestBooleanValidation:
         """Test warning for invalid include_hidden type."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text('[tickle]\ninclude_hidden = 1\n')
+            config_path.write_text("[tickle]\ninclude_hidden = 1\n")
 
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 config = load_config(config_path)
-                assert any("include_hidden" in str(warning.message).lower() for warning in w)
+                assert any(
+                    "include_hidden" in str(warning.message).lower() for warning in w
+                )
                 assert config.include_hidden is None  # Invalid value results in None
 
     def test_load_config_invalid_git_verbose_type(self):
@@ -591,18 +611,22 @@ class TestBooleanValidation:
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 load_config(config_path)
-                assert any("git_verbose" in str(warning.message).lower() for warning in w)
+                assert any(
+                    "git_verbose" in str(warning.message).lower() for warning in w
+                )
 
     def test_load_config_invalid_tree_collapse_type(self):
         """Test warning for invalid tree_collapse type."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text('[tickle]\ntree_collapse = []\n')
+            config_path.write_text("[tickle]\ntree_collapse = []\n")
 
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
                 load_config(config_path)
-                assert any("tree_collapse" in str(warning.message).lower() for warning in w)
+                assert any(
+                    "tree_collapse" in str(warning.message).lower() for warning in w
+                )
 
     def test_load_config_invalid_git_blame_type(self):
         """Test warning for invalid git_blame type."""
@@ -622,6 +646,7 @@ class TestMergeEdgeCases:
     def test_merge_config_empty_ignore_string(self):
         """Test merge handles empty ignore string."""
         import argparse
+
         config = TickleConfig()
         args = argparse.Namespace(
             markers="TODO,FIXME,BUG,NOTE,HACK,CHECKBOX",
@@ -633,7 +658,7 @@ class TestMergeEdgeCases:
             no_blame=False,
             git_verbose=False,
             tree_collapse=False,
-            path="."
+            path=".",
         )
 
         merged = merge_config_with_args(config, args)
@@ -655,7 +680,7 @@ class TestMergeEdgeCases:
             no_blame=False,
             git_verbose=False,
             tree_collapse=False,
-            path="."
+            path=".",
         )
         merged = merge_config_with_args(config, args)
         assert merged["enable_git_blame"] is True
@@ -674,6 +699,7 @@ class TestMergeEdgeCases:
     def test_merge_config_whitespace_in_ignore(self):
         """Test merge handles whitespace in ignore patterns."""
         import argparse
+
         config = TickleConfig()
         args = argparse.Namespace(
             markers="TODO",
@@ -685,7 +711,7 @@ class TestMergeEdgeCases:
             no_blame=False,
             git_verbose=False,
             tree_collapse=False,
-            path="."
+            path=".",
         )
 
         merged = merge_config_with_args(config, args)

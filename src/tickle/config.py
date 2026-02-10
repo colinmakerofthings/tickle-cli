@@ -50,7 +50,9 @@ def get_user_config_path() -> Path | None:
     return None
 
 
-def find_config_file(start_path: str = ".", config_override: str | None = None) -> Path | None:
+def find_config_file(
+    start_path: str = ".", config_override: str | None = None
+) -> Path | None:
     """Find config file in precedence order.
 
     Args:
@@ -71,7 +73,9 @@ def find_config_file(start_path: str = ".", config_override: str | None = None) 
         config_path = Path(config_override)
         if config_path.exists():
             return config_path
-        warnings.warn(f"Config file not found: {config_override}", UserWarning, stacklevel=2)
+        warnings.warn(
+            f"Config file not found: {config_override}", UserWarning, stacklevel=2
+        )
         return None
 
     start = Path(start_path).resolve()
@@ -119,7 +123,9 @@ def load_config(config_path: Path | None = None, validate: bool = True) -> Tickl
         with open(config_path, "rb") as f:
             data = tomllib.load(f)
     except Exception as e:
-        warnings.warn(f"Failed to parse config file {config_path}: {e}", UserWarning, stacklevel=2)
+        warnings.warn(
+            f"Failed to parse config file {config_path}: {e}", UserWarning, stacklevel=2
+        )
         return TickleConfig()
 
     # Handle pyproject.toml [tool.tickle] section
@@ -282,7 +288,9 @@ def merge_config_with_args(config: TickleConfig, args) -> dict:
         result["ignore_patterns"] = config.ignore
     elif hasattr(args, "ignore"):
         result["ignore_patterns"] = (
-            [p.strip() for p in args.ignore.split(",") if p.strip()] if args.ignore else []
+            [p.strip() for p in args.ignore.split(",") if p.strip()]
+            if args.ignore
+            else []
         )
     else:
         result["ignore_patterns"] = []
@@ -378,7 +386,9 @@ ignore = [
 """
 
 
-def format_config_for_display(config: TickleConfig, config_path: Path | None = None) -> str:
+def format_config_for_display(
+    config: TickleConfig, config_path: Path | None = None
+) -> str:
     """Format configuration for human-readable display.
 
     Args:
