@@ -22,6 +22,8 @@ class TestGetUserConfigPath:
 
     def test_windows_path(self):
         """Test user config path on Windows."""
+        import os
+
         with mock.patch("sys.platform", "win32"):
             with mock.patch.dict(
                 os.environ, {"APPDATA": "C:\\Users\\Test\\AppData\\Roaming"}
@@ -30,7 +32,9 @@ class TestGetUserConfigPath:
                 expected = Path(
                     "C:\\Users\\Test\\AppData\\Roaming\\tickle\\tickle.toml"
                 )
-                assert str(path) == str(expected)
+                assert os.path.normcase(
+                    os.path.normpath(str(path))
+                ) == os.path.normcase(os.path.normpath(str(expected)))
 
     def test_unix_path(self):
         """Test user config path on Unix systems."""
@@ -139,13 +143,15 @@ class TestLoadConfig:
         """Test loading basic configuration."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 markers = ["TODO", "FIXME"]
 ignore = ["node_modules", "*.min.js"]
 format = "json"
 sort = "marker"
-""")
+"""
+            )
 
             config = load_config(config_path)
             assert config.markers == ["TODO", "FIXME"]
@@ -157,14 +163,16 @@ sort = "marker"
         """Test loading boolean configuration options."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 reverse = true
 include_hidden = true
 git_blame = false
 git_verbose = true
 tree_collapse = true
-""")
+"""
+            )
 
             config = load_config(config_path)
             assert config.reverse is True
@@ -177,11 +185,13 @@ tree_collapse = true
         """Test loading from pyproject.toml [tool.tickle] section."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "pyproject.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tool.tickle]
 markers = ["BUG"]
 ignore = ["dist"]
-""")
+"""
+            )
 
             config = load_config(config_path)
             assert config.markers == ["BUG"]
@@ -230,12 +240,14 @@ ignore = ["dist"]
         """Test warning for unknown configuration keys."""
         with tempfile.TemporaryDirectory() as tmpdir:
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 markers = ["TODO"]
 unknown_key = "value"
 another_unknown = 123
-""")
+"""
+            )
 
             with warnings.catch_warnings(record=True) as w:
                 warnings.simplefilter("always")
@@ -491,12 +503,14 @@ class TestConfigIntegration:
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create project config
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 markers = ["BUG", "FIXME"]
 ignore = ["node_modules", "dist"]
 format = "json"
-""")
+"""
+            )
 
             # Find config
             found = find_config_file(start_path=tmpdir)
@@ -532,11 +546,13 @@ format = "json"
         with tempfile.TemporaryDirectory() as tmpdir:
             # Create project config
             config_path = Path(tmpdir) / "tickle.toml"
-            config_path.write_text("""
+            config_path.write_text(
+                """
 [tickle]
 markers = ["TODO"]
 format = "json"
-""")
+"""
+            )
 
             found = find_config_file(start_path=tmpdir)
             config = load_config(found)
