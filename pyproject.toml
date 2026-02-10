@@ -1,6 +1,6 @@
 [project]
 name = "tickle-cli"
-version = "0.4.4"
+version = "0.4.5"
 description = "Hierarchical visualization of developer tasks across code repositories"
 readme = "README.md"
 authors = [
