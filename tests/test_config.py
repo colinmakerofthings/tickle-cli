@@ -27,9 +27,10 @@ class TestGetUserConfigPath:
                 os.environ, {"APPDATA": "C:\\Users\\Test\\AppData\\Roaming"}
             ):
                 path = get_user_config_path()
-                assert path == Path(
+                expected = Path(
                     "C:\\Users\\Test\\AppData\\Roaming\\tickle\\tickle.toml"
                 )
+                assert str(path) == str(expected)
 
     def test_unix_path(self):
         """Test user config path on Unix systems."""
