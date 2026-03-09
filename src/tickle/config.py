@@ -42,7 +42,9 @@ def get_user_config_path() -> Path | None:
         # Windows: %APPDATA%\tickle\tickle.toml
         appdata = os.environ.get("APPDATA")
         if appdata:
-            return Path(appdata) / "tickle" / "tickle.toml"
+            path = Path(appdata) / "tickle" / "tickle.toml"
+            # Normalize to ensure backslashes
+            return Path(os.path.normpath(str(path)))
     else:
         # Linux/Mac: ~/.config/tickle/tickle.toml
         home = Path.home()
