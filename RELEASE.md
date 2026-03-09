@@ -46,26 +46,32 @@ This document describes the steps to create a new release of tickle-cli. Follow 
 ## Release Steps
 
 1. **Bump the version** in `pyproject.toml` (use semantic versioning).
-2. **Update `CHANGELOG.md`** with notable changes.
-3. **Commit and push changes:**
+2. **Commit and push changes:**
 
    ```sh
-   git add pyproject.toml CHANGELOG.md
+   git add pyproject.toml
    git commit -m "Release vX.Y.Z"
    git push origin main
    ```
 
-4. **Tag the release and push the tag:**
+3. **Tag the release and push the tag:**
 
    ```sh
    git tag vX.Y.Z
    git push origin vX.Y.Z
    ```
 
-5. **GitHub Actions** will run the release workflow:
+4. **GitHub Actions** will run the release workflow:
    - Run tests, lint, and build
    - Publish to PyPI
-   - Create a GitHub Release
+   - Create a GitHub Release with auto-generated release notes
+
+## Changelog
+
+Changelog entries are now referenced via GitHub Releases. See:
+https://github.com/colinmakerofthings/tickle-cli/releases
+
+No manual editing of CHANGELOG.md is required. All notable changes are documented in the release notes generated from commits and PRs.
 
 ## Verification
 

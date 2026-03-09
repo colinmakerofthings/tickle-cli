@@ -34,6 +34,12 @@ I wanted a fast, configurable way to surface TODOs across many repos. Whether it
 - Alternative JSON / Markdown output formats for automation
 - Cross-platform compatibility (Windows, Linux, macOS)
 
+
+## Changelog
+
+Changelog entries are referenced via GitHub Releases:
+[View Releases](https://github.com/colinmakerofthings/tickle-cli/releases)
+
 ## Installation
 
 ### From PyPI (Recommended)

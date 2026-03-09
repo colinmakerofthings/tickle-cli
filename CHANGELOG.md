@@ -1,10 +1,8 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+Changelog entries are now referenced via GitHub Releases:
+https://github.com/colinmakerofthings/tickle-cli/releases
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes are documented in the release notes generated from commits and PRs.
 
-## [Unreleased]
-
-- Initial release workflow and documentation added.
+No manual editing of this file is required.
